@@ -9,22 +9,40 @@ const sb =
       )
     : null;
 
-const loginSection = document.getElementById("loginSection");
-const adminPanel = document.getElementById("adminPanel");
-const loginForm = document.getElementById("loginForm");
-const loginMsg = document.getElementById("loginMsg");
-const form = document.getElementById("profileForm");
-const msg = document.getElementById("adminMsg");
-const photoFile = document.getElementById("photoFile");
-const adminProfiles = document.getElementById("adminProfiles");
-const adminSearch = document.getElementById("adminSearch");
+const loginSection =
+  document.getElementById("loginSection");
+
+const adminPanel =
+  document.getElementById("adminPanel");
+
+const loginForm =
+  document.getElementById("loginForm");
+
+const loginMsg =
+  document.getElementById("loginMsg");
+
+const form =
+  document.getElementById("profileForm");
+
+const msg =
+  document.getElementById("adminMsg");
+
+const photoFile =
+  document.getElementById("photoFile");
+
+const adminProfiles =
+  document.getElementById("adminProfiles");
+
+const adminSearch =
+  document.getElementById("adminSearch");
 
 
-// =========================
+// ==============================
 // AUTH
-// =========================
+// ==============================
 
 async function refreshAuth() {
+
   if (!sb) {
     loginSection.classList.add("hidden");
     adminPanel.classList.remove("hidden");
@@ -32,86 +50,142 @@ async function refreshAuth() {
     return;
   }
 
-  const { data, error } = await sb.auth.getSession();
+  const { data, error } =
+    await sb.auth.getSession();
 
   if (error) {
-    loginMsg.textContent = "❌ " + error.message;
+    loginMsg.textContent =
+      "❌ " + error.message;
     return;
   }
 
   if (data.session) {
+
     loginSection.classList.add("hidden");
     adminPanel.classList.remove("hidden");
+
     await loadProfiles();
+
   } else {
+
     loginSection.classList.remove("hidden");
     adminPanel.classList.add("hidden");
+
   }
 }
 
 
-loginForm.addEventListener("submit", async function (e) {
-  e.preventDefault();
+// ==============================
+// LOGIN
+// ==============================
 
-  if (!sb) {
-    loginMsg.textContent = "Supabase config ঠিক করুন";
-    return;
+loginForm.addEventListener(
+  "submit",
+  async function(e) {
+
+    e.preventDefault();
+
+    if (!sb) {
+      loginMsg.textContent =
+        "Supabase config বসানো নেই";
+      return;
+    }
+
+    loginMsg.textContent =
+      "Login হচ্ছে...";
+
+    const email =
+      document
+        .getElementById("email")
+        .value
+        .trim();
+
+    const password =
+      document
+        .getElementById("password")
+        .value;
+
+    const { error } =
+      await sb.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) {
+
+      loginMsg.textContent =
+        "❌ " + error.message;
+
+      return;
+    }
+
+    loginMsg.textContent =
+      "✅ Login সফল";
+
+    await refreshAuth();
+
   }
-
-  loginMsg.textContent = "Login হচ্ছে...";
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  const { error } = await sb.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    loginMsg.textContent = "❌ " + error.message;
-    return;
-  }
-
-  loginMsg.textContent = "✅ Login সফল";
-  await refreshAuth();
-});
+);
 
 
-document.getElementById("logoutBtn").onclick = async function () {
-  if (sb) {
-    await sb.auth.signOut();
-  }
+// ==============================
+// LOGOUT
+// ==============================
 
-  refreshAuth();
-};
+document
+  .getElementById("logoutBtn")
+  .onclick = async function() {
+
+    if (sb) {
+      await sb.auth.signOut();
+    }
+
+    location.reload();
+
+  };
 
 
-// =========================
-// PHOTO UPLOAD
-// =========================
+// ==============================
+// PHOTO
+// ==============================
 
 async function uploadPhoto(file) {
-  if (!file) return null;
 
-  if (!sb) return null;
+  if (!file || !sb) {
+    return null;
+  }
 
   if (file.size > 5 * 1024 * 1024) {
-    throw new Error("ছবির সাইজ ৫ MB-এর মধ্যে রাখুন");
+    throw new Error(
+      "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন"
+    );
   }
 
   const ext =
-    (file.name.split(".").pop() || "jpg").toLowerCase();
+    (
+      file.name
+        .split(".")
+        .pop() || "jpg"
+    ).toLowerCase();
 
   const path =
-    `profiles/${crypto.randomUUID()}.${ext}`;
+    "profiles/" +
+    crypto.randomUUID() +
+    "." +
+    ext;
 
-  const { error } = await sb.storage
-    .from("profile-photos")
-    .upload(path, file, {
-      upsert: false,
-      contentType: file.type
-    });
+  const { error } =
+    await sb.storage
+      .from("profile-photos")
+      .upload(
+        path,
+        file,
+        {
+          upsert: false,
+          contentType:
+            file.type || "image/jpeg"
+        }
+      );
 
   if (error) {
     throw error;
@@ -120,84 +194,104 @@ async function uploadPhoto(file) {
   return sb.storage
     .from("profile-photos")
     .getPublicUrl(path)
-    .data.publicUrl;
+    .data
+    .publicUrl;
 }
 
 
-// =========================
+// ==============================
 // ADD PROFILE
-// =========================
+// ==============================
 
-form.addEventListener("submit", async function (e) {
-  e.preventDefault();
+form.addEventListener(
+  "submit",
+  async function(e) {
 
-  msg.textContent = "সংরক্ষণ করা হচ্ছে...";
+    e.preventDefault();
 
-  try {
-    const x = Object.fromEntries(
-      new FormData(form).entries()
-    );
+    msg.textContent =
+      "সংরক্ষণ করা হচ্ছে...";
 
-    delete x.photoFile;
+    try {
 
-    x.created_at = new Date().toISOString();
+      const x =
+        Object.fromEntries(
+          new FormData(form).entries()
+        );
 
-    if (sb) {
-      const file =
-        photoFile && photoFile.files
-          ? photoFile.files[0]
-          : null;
+      delete x.photoFile;
 
-      if (file) {
-        x.photo_url = await uploadPhoto(file);
+      x.created_at =
+        new Date().toISOString();
+
+      if (sb) {
+
+        const file =
+          photoFile &&
+          photoFile.files
+            ? photoFile.files[0]
+            : null;
+
+        if (file) {
+          x.photo_url =
+            await uploadPhoto(file);
+        }
+
+        const { error } =
+          await sb
+            .from("profiles")
+            .insert(x);
+
+        if (error) {
+          throw error;
+        }
+
       } else {
-        x.photo_url = null;
+
+        let a =
+          JSON.parse(
+            localStorage.getItem(
+              "demoProfiles"
+            ) || "null"
+          ) || [];
+
+        x.id =
+          crypto.randomUUID
+            ? crypto.randomUUID()
+            : String(Date.now());
+
+        a.push(x);
+
+        localStorage.setItem(
+          "demoProfiles",
+          JSON.stringify(a)
+        );
       }
 
-      const { error } = await sb
-        .from("profiles")
-        .insert(x);
+      form.reset();
 
-      if (error) {
-        throw error;
-      }
+      msg.textContent =
+        "✅ Profile সফলভাবে যোগ হয়েছে";
 
-    } else {
+      await loadProfiles();
 
-      let a =
-        JSON.parse(
-          localStorage.getItem("demoProfiles") || "null"
-        ) || [];
+    } catch(err) {
 
-      x.id = Date.now();
-      x.photo_url = null;
+      console.error(err);
 
-      a.push(x);
+      msg.textContent =
+        "❌ " +
+        (err.message || err);
 
-      localStorage.setItem(
-        "demoProfiles",
-        JSON.stringify(a)
-      );
     }
 
-    form.reset();
-
-    msg.textContent =
-      "✅ Profile সফলভাবে যোগ হয়েছে";
-
-    await loadProfiles();
-
-  } catch (err) {
-
-    msg.textContent =
-      "❌ " + (err.message || "সমস্যা হয়েছে");
   }
-});
+);
 
 
-// =========================
+// ==============================
 // LOAD PROFILES
-// =========================
+// ==============================
 
 async function loadProfiles(q = "") {
 
@@ -205,47 +299,66 @@ async function loadProfiles(q = "") {
 
     let rows =
       JSON.parse(
-        localStorage.getItem("demoProfiles") || "null"
+        localStorage.getItem(
+          "demoProfiles"
+        ) || "null"
       ) || [];
 
     if (q) {
-      rows = rows.filter(function (x) {
-        return String(x.name || "")
-          .toLocaleLowerCase("bn-BD")
-          .includes(
-            String(q).toLocaleLowerCase("bn-BD")
-          );
-      });
+
+      rows =
+        rows.filter(function(x) {
+
+          return String(x.name || "")
+            .toLocaleLowerCase("bn-BD")
+            .includes(
+              String(q)
+                .toLocaleLowerCase("bn-BD")
+            );
+
+        });
+
     }
 
     renderAdminProfiles(rows);
-    updateDashboardStats();
+
     return;
   }
 
 
-  let query = sb
-    .from("profiles")
-    .select("*")
-    .order("created_at", {
-      ascending: false
-    });
+  let query =
+    sb
+      .from("profiles")
+      .select("*")
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
 
 
   if (q) {
-    query = query.ilike(
-      "name",
-      `%${q}%`
-    );
+
+    query =
+      query.ilike(
+        "name",
+        "%" + q + "%"
+      );
+
   }
 
 
-  const { data, error } = await query;
+  const {
+    data,
+    error
+  } = await query;
 
 
   if (error) {
+
     adminProfiles.innerHTML =
-      `<p style="color:#d7263d">
+      `<p style="color:red">
         ❌ ${escapeAdmin(error.message)}
       </p>`;
 
@@ -253,229 +366,374 @@ async function loadProfiles(q = "") {
   }
 
 
-  renderAdminProfiles(data || []);
+  renderAdminProfiles(
+    data || []
+  );
 
   updateDashboardStats();
+
 }
 
 
-// =========================
+// ==============================
 // SHOW PROFILES
-// =========================
+// ==============================
 
 function renderAdminProfiles(rows) {
 
   if (!rows.length) {
 
     adminProfiles.innerHTML =
-      `<p>কোনো Profile পাওয়া যায়নি।</p>`;
+      "<p>কোনো Profile পাওয়া যায়নি।</p>";
 
     return;
   }
 
 
-  adminProfiles.innerHTML = rows.map(function (p) {
+  adminProfiles.innerHTML =
+    rows.map(function(p) {
 
-    const id = String(p.id);
+      /*
+        সবচেয়ে গুরুত্বপূর্ণ:
+        এখানে ID-কে HTML onclick-এর ভিতরে
+        সরাসরি বসানো হচ্ছে না।
+      */
 
-    return `
-      <div class="profile-item">
+      const id =
+        String(p.id);
 
-        <strong>
-          ${escapeAdmin(p.name || "নাম নেই")}
-        </strong>
 
-        <small>
-          ${escapeAdmin(p.village || "")}
-          ${p.age ? " · " + escapeAdmin(p.age) + " বছর" : ""}
-        </small>
+      return `
 
-        <div style="
-          display:flex;
-          gap:8px;
-          margin-top:10px;
-        ">
+        <div
+          class="profile-item"
+          data-profile-id="${escapeAdmin(id)}"
+          style="
+            padding:15px;
+            margin-bottom:12px;
+            border:1px solid #ddd;
+            border-radius:12px;
+          "
+        >
 
-          <button
-            type="button"
-            class="primary"
-            data-action="edit"
-            data-id="${escapeAdmin(id)}"
+          <strong>
+            ${escapeAdmin(
+              p.name || "নাম নেই"
+            )}
+          </strong>
+
+          <small>
+            ${escapeAdmin(
+              p.village || ""
+            )}
+
+            ${
+              p.age
+                ? " · " +
+                  escapeAdmin(p.age) +
+                  " বছর"
+                : ""
+            }
+          </small>
+
+          <div
+            style="
+              display:flex;
+              gap:8px;
+              margin-top:10px;
+            "
           >
-            ✏️ Edit
-          </button>
 
-          <button
-            type="button"
-            class="primary"
-            style="background:#d7263d"
-            data-action="delete"
-            data-id="${escapeAdmin(id)}"
-          >
-            🗑️ Delete
-          </button>
+            <button
+              type="button"
+              class="primary edit-profile-btn"
+              data-id="${escapeAdmin(id)}"
+            >
+              ✏️ Edit
+            </button>
+
+            <button
+              type="button"
+              class="delete-profile-btn"
+              data-id="${escapeAdmin(id)}"
+              style="
+                background:#d7263d;
+                color:white;
+                border:0;
+                border-radius:8px;
+                padding:8px 14px;
+              "
+            >
+              🗑️ Delete
+            </button>
+
+          </div>
 
         </div>
 
-      </div>
-    `;
+      `;
 
-  }).join("");
+    }).join("");
+
+
+  /*
+    Edit button
+  */
+
+  adminProfiles
+    .querySelectorAll(
+      ".edit-profile-btn"
+    )
+    .forEach(function(button) {
+
+      button.addEventListener(
+        "click",
+        function() {
+
+          const id =
+            button.getAttribute(
+              "data-id"
+            );
+
+          editProfile(id);
+
+        }
+      );
+
+    });
+
+
+  /*
+    Delete button
+  */
+
+  adminProfiles
+    .querySelectorAll(
+      ".delete-profile-btn"
+    )
+    .forEach(function(button) {
+
+      button.addEventListener(
+        "click",
+        function() {
+
+          const id =
+            button.getAttribute(
+              "data-id"
+            );
+
+          deleteProfile(id);
+
+        }
+      );
+
+    });
+
 }
 
 
-// =========================
-// BUTTON CLICK
-// =========================
-// UUID / number দুটোই নিরাপদে কাজ করবে
+// ==============================
+// ESCAPE
+// ==============================
 
-adminProfiles.addEventListener(
-  "click",
-  async function (e) {
+function escapeAdmin(s) {
 
-    const button =
-      e.target.closest("button[data-action]");
+  return String(s ?? "")
+    .replace(
+      /[&<>"']/g,
+      function(m) {
 
-    if (!button) return;
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[m];
 
-    const id = button.dataset.id;
+      }
+    );
 
-    if (!id) {
-      alert("Profile ID পাওয়া যায়নি");
-      return;
-    }
-
-
-    if (button.dataset.action === "edit") {
-      await editProfile(id);
-    }
+}
 
 
-    if (button.dataset.action === "delete") {
-      await deleteProfile(id);
-    }
-
-  }
-);
-
-
-// =========================
-// EDIT PROFILE
-// =========================
+// ==============================
+// EDIT
+// ==============================
 
 async function editProfile(id) {
 
   try {
 
-    let p = null;
+    let p;
 
 
     if (sb) {
 
-      const { data, error } = await sb
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const result =
+        await sb
+          .from("profiles")
+          .select("*")
+          .eq("id", id)
+          .single();
 
 
-      if (error) {
-        alert("❌ Profile পাওয়া যায়নি\n\n" + error.message);
+      if (result.error) {
+
+        alert(
+          "❌ Profile পাওয়া যায়নি\n\n" +
+          result.error.message
+        );
+
         return;
       }
 
-      p = data;
+
+      p =
+        result.data;
 
     } else {
 
       const a =
         JSON.parse(
-          localStorage.getItem("demoProfiles") || "null"
+          localStorage.getItem(
+            "demoProfiles"
+          ) || "null"
         ) || [];
 
-      p = a.find(function (x) {
-        return String(x.id) === String(id);
-      });
+
+      p =
+        a.find(function(x) {
+
+          return String(x.id) ===
+            String(id);
+
+        });
+
     }
 
 
     if (!p) {
-      alert("❌ Profile পাওয়া যায়নি");
+
+      alert(
+        "❌ Profile পাওয়া যায়নি"
+      );
+
       return;
     }
 
 
-    const name = prompt(
-      "নাম:",
-      p.name || ""
-    );
+    const name =
+      prompt(
+        "নাম:",
+        p.name || ""
+      );
 
     if (name === null) return;
 
 
-    const father = prompt(
-      "পিতা/স্বামীর নাম:",
-      p.father || ""
-    );
+    const father =
+      prompt(
+        "পিতা/স্বামীর নাম:",
+        p.father || ""
+      );
 
     if (father === null) return;
 
 
-    const village = prompt(
-      "গ্রাম:",
-      p.village || ""
-    );
+    const village =
+      prompt(
+        "গ্রাম:",
+        p.village || ""
+      );
 
     if (village === null) return;
 
 
-    const age = prompt(
-      "বয়স:",
-      p.age ?? ""
-    );
+    const age =
+      prompt(
+        "বয়স:",
+        p.age ?? ""
+      );
 
     if (age === null) return;
 
 
-    const death_reason = prompt(
-      "মৃত্যুর কারণ:",
-      p.death_reason || ""
-    );
+    const death_reason =
+      prompt(
+        "মৃত্যুর কারণ:",
+        p.death_reason || ""
+      );
 
     if (death_reason === null) return;
 
 
-    const date = prompt(
-      "তারিখ:",
-      p.date || p.death_date || ""
-    );
+    const date =
+      prompt(
+        "তারিখ (YYYY-MM-DD):",
+        p.date ||
+        p.death_date ||
+        ""
+      );
 
     if (date === null) return;
 
 
     const updates = {
-      name: name.trim(),
-      father: father.trim(),
-      village: village.trim(),
-      age: age.trim() ? Number(age) : null,
-      death_reason: death_reason.trim(),
-      date: date.trim()
+
+      name:
+        name.trim(),
+
+      father:
+        father.trim(),
+
+      village:
+        village.trim(),
+
+      age:
+        age.trim()
+          ? Number(age)
+          : null,
+
+      death_reason:
+        death_reason.trim(),
+
+      date:
+        date.trim() || null
+
     };
 
 
     if (sb) {
 
-      const { error } = await sb
-        .from("profiles")
-        .update(updates)
-        .eq("id", id);
+      const result =
+        await sb
+          .from("profiles")
+          .update(updates)
+          .eq("id", id)
+          .select();
 
 
-      if (error) {
+      if (result.error) {
+
         alert(
           "❌ Edit করা যায়নি\n\n" +
-          error.message
+          result.error.message
         );
+
+        return;
+      }
+
+
+      if (
+        !result.data ||
+        result.data.length === 0
+      ) {
+
+        alert(
+          "❌ Profile Update করার অনুমতি নেই।"
+        );
+
         return;
       }
 
@@ -483,56 +741,75 @@ async function editProfile(id) {
 
       let a =
         JSON.parse(
-          localStorage.getItem("demoProfiles") || "null"
+          localStorage.getItem(
+            "demoProfiles"
+          ) || "null"
         ) || [];
 
 
-      a = a.map(function (x) {
+      a =
+        a.map(function(x) {
 
-        if (String(x.id) === String(id)) {
-          return {
-            ...x,
-            ...updates
-          };
-        }
+          if (
+            String(x.id) ===
+            String(id)
+          ) {
 
-        return x;
-      });
+            return {
+              ...x,
+              ...updates
+            };
+
+          }
+
+          return x;
+
+        });
 
 
       localStorage.setItem(
         "demoProfiles",
         JSON.stringify(a)
       );
+
     }
 
 
-    alert("✅ Profile সফলভাবে Edit হয়েছে");
+    alert(
+      "✅ Profile সফলভাবে Edit হয়েছে"
+    );
+
 
     await loadProfiles(
       adminSearch.value.trim()
     );
 
-  } catch (err) {
+
+  } catch(err) {
+
+    console.error(err);
 
     alert(
       "❌ Edit করার সময় সমস্যা হয়েছে\n\n" +
       (err.message || err)
     );
+
   }
+
 }
 
 
-// =========================
-// DELETE PROFILE
-// =========================
+// ==============================
+// DELETE
+// ==============================
 
 async function deleteProfile(id) {
 
-  const ok = confirm(
-    "এই Profile-টি স্থায়ীভাবে Delete করবেন?\n\n" +
-    "এই কাজটি আর Undo করা যাবে না।"
-  );
+  const ok =
+    confirm(
+      "এই Profile-টি স্থায়ীভাবে Delete করবেন?\n\n" +
+      "এই কাজটি আর Undo করা যাবে না।"
+    );
 
 
   if (!ok) return;
@@ -542,17 +819,32 @@ async function deleteProfile(id) {
 
     if (sb) {
 
-      const { error } = await sb
-        .from("profiles")
-        .delete()
-        .eq("id", id);
+      const result =
+        await sb
+          .from("profiles")
+          .delete()
+          .eq("id", id)
+          .select();
 
 
-      if (error) {
+      if (result.error) {
 
         alert(
           "❌ Delete করা যায়নি\n\n" +
-          error.message
+          result.error.message
+        );
+
+        return;
+      }
+
+
+      if (
+        !result.data ||
+        result.data.length === 0
+      ) {
+
+        alert(
+          "❌ Profile Delete করার অনুমতি নেই।"
         );
 
         return;
@@ -562,23 +854,32 @@ async function deleteProfile(id) {
 
       let a =
         JSON.parse(
-          localStorage.getItem("demoProfiles") || "null"
+          localStorage.getItem(
+            "demoProfiles"
+          ) || "null"
         ) || [];
 
 
-      a = a.filter(function (x) {
-        return String(x.id) !== String(id);
-      });
+      a =
+        a.filter(function(x) {
+
+          return String(x.id) !==
+            String(id);
+
+        });
 
 
       localStorage.setItem(
         "demoProfiles",
         JSON.stringify(a)
       );
+
     }
 
 
-    alert("✅ Profile Delete হয়েছে");
+    alert(
+      "✅ Profile সফলভাবে Delete হয়েছে"
+    );
 
 
     await loadProfiles(
@@ -586,39 +887,48 @@ async function deleteProfile(id) {
     );
 
 
-  } catch (err) {
+  } catch(err) {
+
+    console.error(err);
 
     alert(
       "❌ Delete করার সময় সমস্যা হয়েছে\n\n" +
       (err.message || err)
     );
+
   }
+
 }
 
 
-// =========================
+// ==============================
 // SEARCH
-// =========================
+// ==============================
 
 document
-  .getElementById("adminSearchBtn")
-  .addEventListener("click", function () {
+  .getElementById(
+    "adminSearchBtn"
+  )
+  .addEventListener(
+    "click",
+    function() {
 
-    loadProfiles(
-      adminSearch.value.trim()
-    );
+      loadProfiles(
+        adminSearch.value.trim()
+      );
 
-  });
+    }
+  );
 
 
 adminSearch.addEventListener(
   "keydown",
-  function (e) {
+  function(e) {
 
     if (e.key === "Enter") {
 
       loadProfiles(
-        adminSearch.value.trim()
+        e.target.value.trim()
       );
 
     }
@@ -627,92 +937,80 @@ adminSearch.addEventListener(
 );
 
 
-// =========================
-// DASHBOARD STATS
-// =========================
+// ==============================
+// DASHBOARD
+// ==============================
 
 async function updateDashboardStats() {
 
-  let rows = [];
+  if (!sb) return;
 
 
-  if (sb) {
-
-    const { data, error } = await sb
+  const result =
+    await sb
       .from("profiles")
       .select("created_at");
 
 
-    if (!error) {
-      rows = data || [];
-    }
-
-  } else {
-
-    rows =
-      JSON.parse(
-        localStorage.getItem("demoProfiles") || "null"
-      ) || [];
-  }
+  if (result.error) return;
 
 
-  const now = new Date();
+  const rows =
+    result.data || [];
 
-  const month = rows.filter(function (x) {
 
-    const d = new Date(x.created_at);
+  const now =
+    new Date();
 
-    return (
-      d.getFullYear() === now.getFullYear() &&
-      d.getMonth() === now.getMonth()
-    );
 
-  }).length;
+  const month =
+    rows.filter(function(x) {
+
+      if (!x.created_at) {
+        return false;
+      }
+
+      const d =
+        new Date(x.created_at);
+
+
+      return (
+        d.getFullYear() ===
+          now.getFullYear() &&
+        d.getMonth() ===
+          now.getMonth()
+      );
+
+    }).length;
 
 
   const total =
-    document.getElementById("dashTotal");
+    document.getElementById(
+      "dashTotal"
+    );
 
   const monthly =
-    document.getElementById("dashMonthly");
+    document.getElementById(
+      "dashMonthly"
+    );
 
 
   if (total) {
-    total.textContent = rows.length;
+    total.textContent =
+      rows.length;
   }
 
 
   if (monthly) {
-    monthly.textContent = month;
+    monthly.textContent =
+      month;
   }
+
 }
 
 
-// =========================
-// HTML ESCAPE
-// =========================
-
-function escapeAdmin(s) {
-
-  return String(s ?? "").replace(
-    /[&<>"']/g,
-    function (m) {
-
-      return {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[m];
-
-    }
-  );
-}
-
-
-// =========================
+// ==============================
 // START
-// =========================
+// ==============================
 
 refreshAuth();
