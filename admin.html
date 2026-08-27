@@ -4,59 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>স্মৃতি সংরক্ষণ — Admin</title>
+<title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
-  font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;
-  background:#f4f7fb;
-  color:#172033;
+  padding:0;
+  background:#f4f6f8;
+  color:#20242a;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans Bengali",
+    sans-serif;
 }
 
 .container{
   width:100%;
   max-width:900px;
   margin:auto;
-  padding:15px;
+  padding:14px;
 }
 
 .card{
-  background:white;
-  border-radius:18px;
+  background:#fff;
+  border-radius:16px;
   padding:18px;
   margin-bottom:18px;
-  box-shadow:0 3px 18px rgba(0,0,0,.08);
+  box-shadow:0 3px 15px rgba(0,0,0,.08);
 }
 
-h1{margin:0 0 5px;font-size:25px}
-h2{margin-top:0;font-size:21px}
+h1{
+  margin:0 0 5px;
+  font-size:25px;
+}
+
+h2{
+  margin:0 0 15px;
+  font-size:20px;
+}
 
 .subtitle{
-  color:#667085;
+  color:#68707b;
+  font-size:14px;
 }
 
 label{
   display:block;
-  margin:12px 0 6px;
+  margin-top:12px;
+  margin-bottom:6px;
   font-weight:700;
 }
 
-input,textarea,button{
+input,
+textarea,
+button{
   font:inherit;
 }
 
-input,textarea{
+input,
+textarea{
   width:100%;
   padding:13px;
-  border:1px solid #d7dce5;
+  border:1px solid #d5dbe3;
   border-radius:11px;
-  background:white;
   outline:none;
+  background:#fff;
 }
 
 textarea{
@@ -64,43 +84,38 @@ textarea{
   resize:vertical;
 }
 
-input:focus,textarea:focus{
-  border-color:#1264d8;
+input:focus,
+textarea:focus{
+  border-color:#1769d2;
 }
 
 button{
   border:0;
-  border-radius:11px;
-  padding:12px 18px;
+  border-radius:12px;
+  padding:13px 18px;
   font-weight:800;
   cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
 
 .primary{
-  background:#0866d8;
-  color:white;
+  background:#1266d8;
+  color:#fff;
 }
 
 .secondary{
-  background:#e9edf3;
-  color:#172033;
+  background:#e9edf2;
+  color:#222;
 }
 
 .danger{
-  background:#df2945;
-  color:white;
-}
-
-.success{
-  color:#138a4b;
-}
-
-.error{
-  color:#d9233e;
+  background:#d9253d;
+  color:#fff;
 }
 
 .hidden{
-  display:none!important;
+  display:none !important;
 }
 
 .message{
@@ -109,314 +124,466 @@ button{
   font-weight:700;
 }
 
+.success{
+  color:#138a4b;
+}
+
+.error{
+  color:#d9253d;
+}
+
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  gap:12px;
+}
+
+.login-box{
+  max-width:500px;
+  margin:50px auto;
+}
+
+/* SEARCH */
+
+.search-row{
+  display:flex;
   gap:10px;
 }
 
+.search-row input{
+  flex:1;
+}
+
+/* PROFILE */
+
 .profile{
-  border:1px solid #dfe5ee;
-  border-radius:16px;
-  padding:15px;
-  margin-bottom:12px;
   background:#fff;
+  border:1px solid #dfe4eb;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
 }
 
 .profile-name{
   font-size:21px;
   font-weight:900;
-  margin-bottom:5px;
+  margin-bottom:7px;
 }
 
 .profile-info{
-  color:#667085;
+  color:#626b77;
   line-height:1.8;
+  font-size:14px;
 }
 
-.actions{
-  display:flex;
-  gap:10px;
-  margin-top:12px;
-  flex-wrap:wrap;
-}
-
-.actions button{
-  min-width:120px;
-}
-
-.photo{
+.profile-photo{
   width:110px;
   height:110px;
   object-fit:cover;
   border-radius:12px;
-  margin-bottom:10px;
   display:block;
+  margin-bottom:12px;
 }
 
-.search{
+/*
+================================================
+EDIT / DELETE BUTTON
+================================================
+*/
+
+.profile-buttons{
   display:flex;
-  gap:8px;
+  align-items:center;
+  gap:18px;
+  margin-top:16px;
+  width:100%;
 }
 
-.search input{
+.profile-buttons button{
+  flex:1;
+  min-height:50px;
+  font-size:16px;
+  position:relative;
+  z-index:20;
+}
+
+.edit-button{
+  background:#1266d8;
+  color:#fff;
+}
+
+.delete-button{
+  background:#d9253d;
+  color:#fff;
+}
+
+/*
+================================================
+EDIT BOX
+================================================
+*/
+
+.edit-box{
+  margin-top:16px;
+  padding:16px;
+  border-radius:14px;
+  background:#f5f9ff;
+  border:2px solid #c5dcff;
+}
+
+.edit-title{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.edit-buttons{
+  display:flex;
+  gap:12px;
+  margin-top:16px;
+}
+
+.edit-buttons button{
   flex:1;
 }
 
-.empty{
-  padding:20px;
-  text-align:center;
-  color:#667085;
-}
-
-.edit-box{
-  background:#f7faff;
-  border:2px solid #bcd7ff;
-  border-radius:16px;
-  padding:15px;
-  margin-top:15px;
-}
-
-.login{
-  max-width:500px;
-  margin:50px auto;
-}
+/* MOBILE */
 
 @media(max-width:600px){
-  .container{padding:10px}
+
+  .container{
+    padding:10px;
+  }
+
+  .card{
+    padding:14px;
+    border-radius:14px;
+  }
+
+  h1{
+    font-size:22px;
+  }
 
   .topbar{
     align-items:flex-start;
   }
 
-  .search{
+  .search-row{
     flex-direction:column;
   }
 
-  .search button{
+  .search-row button{
     width:100%;
   }
 
-  .actions button{
-    flex:1;
+  /*
+  Edit/Delete পাশাপাশি থাকবে,
+  কিন্তু touch area আলাদা থাকবে।
+  */
+
+  .profile-buttons{
+    gap:16px;
   }
+
+  .profile-buttons button{
+    min-height:54px;
+    padding:12px 8px;
+  }
+
+  .edit-buttons{
+    flex-direction:column;
+  }
+
+  .edit-buttons button{
+    width:100%;
+  }
+
+}
+
+/* খুব ছোট স্ক্রিন */
+
+@media(max-width:360px){
+
+  .profile-buttons{
+    gap:12px;
+  }
+
+  .profile-buttons button{
+    font-size:14px;
+  }
+
 }
 </style>
 </head>
 
+
 <body>
 
-<!-- LOGIN -->
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
 <section id="loginSection">
-  <div class="container login">
-    <div class="card">
 
-      <h1>🔐 Admin Login</h1>
+<div class="container login-box">
 
-      <p class="subtitle">
-        স্মৃতি সংরক্ষণ — Admin Dashboard
-      </p>
+<div class="card">
 
-      <form id="loginForm">
+<h1>🔐 Admin Login</h1>
 
-        <label>Email</label>
+<p class="subtitle">
+স্মৃতি সংরক্ষণ — Admin Dashboard
+</p>
 
-        <input
-          id="email"
-          type="email"
-          placeholder="Admin Email"
-          required
-        >
+<form id="loginForm">
 
-        <label>Password</label>
+<label for="email">
+Email
+</label>
 
-        <input
-          id="password"
-          type="password"
-          placeholder="Password"
-          required
-        >
+<input
+  id="email"
+  type="email"
+  placeholder="Admin Email"
+  autocomplete="username"
+  required
+>
 
-        <button
-          type="submit"
-          class="primary"
-          style="width:100%;margin-top:16px"
-        >
-          🔐 Login
-        </button>
+<label for="password">
+Password
+</label>
 
-      </form>
+<input
+  id="password"
+  type="password"
+  placeholder="Password"
+  autocomplete="current-password"
+  required
+>
 
-      <div id="loginMsg" class="message"></div>
+<button
+  type="submit"
+  class="primary"
+  style="width:100%;margin-top:16px;"
+>
+🔐 Login
+</button>
 
-    </div>
-  </div>
+</form>
+
+<div id="loginMsg" class="message"></div>
+
+</div>
+
+</div>
+
 </section>
 
 
-<!-- ADMIN -->
+
+<!-- =====================================================
+     ADMIN PANEL
+===================================================== -->
+
 <main id="adminPanel" class="hidden">
 
 <div class="container">
 
-  <!-- HEADER -->
-  <div class="card">
 
-    <div class="topbar">
+<!-- HEADER -->
 
-      <div>
-        <h1>স্মৃতি সংরক্ষণ</h1>
-        <div class="subtitle">Admin Dashboard</div>
-      </div>
+<div class="card">
 
-      <button
-        id="logoutBtn"
-        class="secondary"
-      >
-        Logout
-      </button>
+<div class="topbar">
 
-    </div>
+<div>
 
-  </div>
+<h1>স্মৃতি সংরক্ষণ</h1>
 
+<div class="subtitle">
+Admin Dashboard
+</div>
 
-  <!-- ADD PROFILE -->
-  <div class="card">
+</div>
 
-    <h2>➕ নতুন Profile যোগ করুন</h2>
+<button
+  id="logoutBtn"
+  type="button"
+  class="secondary"
+>
+Logout
+</button>
 
-    <form id="profileForm">
+</div>
 
-      <label>নাম *</label>
-
-      <input
-        id="name"
-        required
-        placeholder="নাম লিখুন"
-      >
-
-      <label>পিতা / স্বামীর নাম</label>
-
-      <input
-        id="father"
-        placeholder="পিতা / স্বামীর নাম"
-      >
-
-      <label>ঠিকানা / গ্রাম</label>
-
-      <input
-        id="address"
-        placeholder="গ্রাম / ঠিকানা"
-      >
-
-      <label>বয়স</label>
-
-      <input
-        id="age"
-        type="number"
-        min="0"
-        placeholder="বয়স"
-      >
-
-      <label>মৃত্যুর তারিখ</label>
-
-      <input
-        id="death_date"
-        type="date"
-      >
-
-      <label>মৃত্যুর কারণ</label>
-
-      <textarea
-        id="death_reason"
-        placeholder="মৃত্যুর কারণ"
-      ></textarea>
-
-      <label>ছবি</label>
-
-      <input
-        id="photoFile"
-        type="file"
-        accept="image/*"
-      >
-
-      <button
-        type="submit"
-        class="primary"
-        style="width:100%;margin-top:16px"
-      >
-        💾 Profile সংরক্ষণ করুন
-      </button>
-
-    </form>
-
-    <div id="adminMsg" class="message"></div>
-
-  </div>
+</div>
 
 
-  <!-- SEARCH -->
-  <div class="card">
 
-    <h2>🔎 Profile Search</h2>
+<!-- ADD PROFILE -->
 
-    <div class="search">
+<div class="card">
 
-      <input
-        id="adminSearch"
-        placeholder="নাম দিয়ে খুঁজুন..."
-      >
+<h2>➕ নতুন Profile যোগ করুন</h2>
 
-      <button
-        id="adminSearchBtn"
-        class="primary"
-      >
-        🔎 Search
-      </button>
+<form id="profileForm">
 
-    </div>
+<label>
+নাম *
+</label>
 
-  </div>
+<input
+  id="name"
+  type="text"
+  placeholder="নাম লিখুন"
+  required
+>
+
+<label>
+পিতা / স্বামীর নাম
+</label>
+
+<input
+  id="father_husband"
+  type="text"
+  placeholder="পিতা / স্বামীর নাম"
+>
+
+<label>
+ঠিকানা / গ্রাম
+</label>
+
+<input
+  id="address"
+  type="text"
+  placeholder="গ্রাম / ঠিকানা"
+>
+
+<label>
+বয়স
+</label>
+
+<input
+  id="age"
+  type="number"
+  min="0"
+  placeholder="বয়স"
+>
+
+<label>
+মৃত্যুর তারিখ
+</label>
+
+<input
+  id="death_date"
+  type="date"
+>
+
+<label>
+মৃত্যুর কারণ
+</label>
+
+<textarea
+  id="death_reason"
+  placeholder="মৃত্যুর কারণ লিখুন"
+></textarea>
+
+<label>
+ছবি
+</label>
+
+<input
+  id="photoFile"
+  type="file"
+  accept="image/*"
+>
+
+<button
+  type="submit"
+  class="primary"
+  style="width:100%;margin-top:16px;"
+>
+💾 Profile সংরক্ষণ করুন
+</button>
+
+</form>
+
+<div id="adminMsg" class="message"></div>
+
+</div>
 
 
-  <!-- PROFILES -->
-  <div class="card">
 
-    <h2>👥 Profiles</h2>
+<!-- SEARCH -->
 
-    <div id="adminProfiles">
-      Profile লোড হচ্ছে...
-    </div>
+<div class="card">
 
-  </div>
+<h2>🔎 Profile Search</h2>
+
+<div class="search-row">
+
+<input
+  id="adminSearch"
+  type="search"
+  placeholder="নাম দিয়ে খুঁজুন..."
+>
+
+<button
+  id="adminSearchBtn"
+  type="button"
+  class="primary"
+>
+🔎 Search
+</button>
+
+</div>
+
+</div>
+
+
+
+<!-- PROFILE LIST -->
+
+<div class="card">
+
+<h2>👥 Profiles</h2>
+
+<div id="adminProfiles">
+Profile লোড হচ্ছে...
+</div>
+
+</div>
+
 
 </div>
 
 </main>
 
 
-<!-- CONFIG -->
+
+<!-- =====================================================
+     CONFIG
+===================================================== -->
+
 <script src="config.js"></script>
+
 
 
 <script>
 
 /* =====================================================
-   SUPABASE CONNECTION
+   SUPABASE
 ===================================================== */
 
-let client = null;
+let sb = null;
 
-function getSupabaseClient(){
+function getSupabase(){
 
-  if(client) return client;
-
-  /*
-   তোমার config.js-এ নিচের যেকোনো সাধারণ নাম থাকলেও
-   সেটি ধরার চেষ্টা করবে।
-  */
+  if(sb){
+    return sb;
+  }
 
   const url =
     window.SUPABASE_URL ||
@@ -431,20 +598,21 @@ function getSupabaseClient(){
 
   if(!url || !key){
 
-    alert(
-      "Supabase config পাওয়া যায়নি। config.js পরীক্ষা করুন।"
+    throw new Error(
+      "Supabase URL অথবা Key পাওয়া যায়নি। config.js পরীক্ষা করুন।"
     );
 
-    throw new Error(
-      "Supabase URL অথবা Key পাওয়া যায়নি"
-    );
   }
 
-  client =
-    window.supabase.createClient(url,key);
+  sb =
+    window.supabase.createClient(
+      url,
+      key
+    );
 
-  return client;
+  return sb;
 }
+
 
 
 /* =====================================================
@@ -482,20 +650,24 @@ const adminSearchBtn =
   document.getElementById("adminSearchBtn");
 
 
+
 /* =====================================================
    MESSAGE
 ===================================================== */
 
-function message(el,text,type=""){
+function showMessage(
+  element,
+  text,
+  type=""
+){
 
-  el.textContent = text;
+  element.textContent = text;
 
-  el.className =
-    "message " +
-    (type==="error" ? "error" : "") +
-    (type==="success" ? "success" : "");
+  element.className =
+    "message " + type;
 
 }
+
 
 
 /* =====================================================
@@ -504,55 +676,68 @@ function message(el,text,type=""){
 
 loginForm.addEventListener(
   "submit",
-  async function(e){
+  async function(event){
 
-    e.preventDefault();
+    event.preventDefault();
 
-    message(
+    showMessage(
       loginMsg,
       "Login হচ্ছে..."
     );
 
     try{
 
-      const sb = getSupabaseClient();
+      const supabase =
+        getSupabase();
 
       const email =
-        document.getElementById("email").value.trim();
+        document
+        .getElementById("email")
+        .value
+        .trim();
 
       const password =
-        document.getElementById("password").value;
+        document
+        .getElementById("password")
+        .value;
 
-      const {data,error} =
-        await sb.auth.signInWithPassword({
-          email,
-          password
+      const result =
+        await supabase.auth.signInWithPassword({
+
+          email:email,
+
+          password:password
+
         });
 
-      if(error)
-        throw error;
 
-      if(!data.session){
+      if(result.error){
 
-        throw new Error(
-          "Login session তৈরি হয়নি।"
-        );
+        throw result.error;
 
       }
 
-      loginSection.classList.add("hidden");
 
-      adminPanel.classList.remove("hidden");
+      loginSection
+        .classList
+        .add("hidden");
+
+      adminPanel
+        .classList
+        .remove("hidden");
+
 
       await loadProfiles();
+
 
     }catch(error){
 
       console.error(error);
 
-      message(
+      showMessage(
         loginMsg,
-        "Login ব্যর্থ: " + error.message,
+        "❌ Login ব্যর্থ: " +
+        error.message,
         "error"
       );
 
@@ -560,6 +745,7 @@ loginForm.addEventListener(
 
   }
 );
+
 
 
 /* =====================================================
@@ -572,17 +758,18 @@ logoutBtn.addEventListener(
 
     try{
 
-      const sb = getSupabaseClient();
+      const supabase =
+        getSupabase();
 
-      await sb.auth.signOut();
+      await supabase.auth.signOut();
 
-      adminPanel.classList.add("hidden");
+      adminPanel
+        .classList
+        .add("hidden");
 
-      loginSection.classList.remove("hidden");
-
-      loginForm.reset();
-
-      adminProfiles.innerHTML = "";
+      loginSection
+        .classList
+        .remove("hidden");
 
     }catch(error){
 
@@ -594,35 +781,32 @@ logoutBtn.addEventListener(
 );
 
 
+
 /* =====================================================
-   CHECK EXISTING SESSION
+   SESSION
 ===================================================== */
 
 async function checkSession(){
 
   try{
 
-    const sb = getSupabaseClient();
+    const supabase =
+      getSupabase();
 
-    const {
-      data:{
-        session
-      }
-    } = await sb.auth.getSession();
+    const result =
+      await supabase.auth.getSession();
 
-    if(session){
+    if(result.data.session){
 
-      loginSection.classList.add("hidden");
+      loginSection
+        .classList
+        .add("hidden");
 
-      adminPanel.classList.remove("hidden");
+      adminPanel
+        .classList
+        .remove("hidden");
 
       await loadProfiles();
-
-    }else{
-
-      loginSection.classList.remove("hidden");
-
-      adminPanel.classList.add("hidden");
 
     }
 
@@ -630,9 +814,8 @@ async function checkSession(){
 
     console.error(error);
 
-    message(
+    showMessage(
       loginMsg,
-      "Supabase connection সমস্যা: " +
       error.message,
       "error"
     );
@@ -642,149 +825,86 @@ async function checkSession(){
 }
 
 
+
 /* =====================================================
    ADD PROFILE
 ===================================================== */
 
 profileForm.addEventListener(
   "submit",
-  async function(e){
+  async function(event){
 
-    e.preventDefault();
+    event.preventDefault();
 
-    message(
+    showMessage(
       adminMsg,
       "Profile সংরক্ষণ হচ্ছে..."
     );
 
+
     try{
 
-      const sb = getSupabaseClient();
+      const supabase =
+        getSupabase();
 
-      const {
-        data:{
-          user
-        }
-      } = await sb.auth.getUser();
 
-      if(!user){
+      const name =
+        document
+        .getElementById("name")
+        .value
+        .trim();
+
+
+      if(!name){
 
         throw new Error(
-          "Admin login session পাওয়া যায়নি।"
+          "নাম দিতে হবে।"
         );
 
       }
 
-      const name =
-        document.getElementById("name")
-        .value.trim();
 
       const father =
-        document.getElementById("father")
-        .value.trim();
+        document
+        .getElementById("father_husband")
+        .value
+        .trim();
+
 
       const address =
-        document.getElementById("address")
-        .value.trim();
+        document
+        .getElementById("address")
+        .value
+        .trim();
+
 
       const ageValue =
-        document.getElementById("age")
+        document
+        .getElementById("age")
         .value;
 
-      const death_date =
-        document.getElementById("death_date")
-        .value || null;
-
-      const death_reason =
-        document.getElementById("death_reason")
-        .value.trim();
 
       const age =
         ageValue === ""
           ? null
           : Number(ageValue);
 
-      const photoFile =
-        document.getElementById("photoFile")
-        .files[0];
 
-      let photo_url = null;
-
-
-      /*
-       PHOTO UPLOAD
-
-       যদি storage bucket "photos" থাকে,
-       তাহলে ছবি আপলোড করবে।
-
-       bucket না থাকলে profile save বন্ধ করবে না।
-      */
-
-      if(photoFile){
-
-        try{
-
-          const ext =
-            photoFile.name
-            .split(".")
-            .pop();
-
-          const fileName =
-            Date.now() +
-            "_" +
-            Math.random()
-            .toString(36)
-            .substring(2) +
-            "." +
-            ext;
-
-          const {
-            error:uploadError
-          } =
-            await sb.storage
-            .from("photos")
-            .upload(
-              fileName,
-              photoFile,
-              {
-                upsert:false
-              }
-            );
-
-          if(!uploadError){
-
-            const {
-              data:urlData
-            } =
-              sb.storage
-              .from("photos")
-              .getPublicUrl(fileName);
-
-            photo_url =
-              urlData.publicUrl;
-
-          }else{
-
-            console.warn(
-              "Photo upload হয়নি:",
-              uploadError.message
-            );
-
-          }
-
-        }catch(photoError){
-
-          console.warn(
-            "Photo upload error:",
-            photoError
-          );
-
-        }
-
-      }
+      const deathDate =
+        document
+        .getElementById("death_date")
+        .value ||
+        null;
 
 
-      const insertData = {
+      const deathReason =
+        document
+        .getElementById("death_reason")
+        .value
+        .trim();
+
+
+      const dataToInsert = {
 
         name:name,
 
@@ -797,50 +917,125 @@ profileForm.addEventListener(
         age:age,
 
         death_date:
-          death_date,
+          deathDate,
 
         death_reason:
-          death_reason || null,
-
-        photo_url:
-          photo_url
+          deathReason || null
 
       };
 
 
-      const {
-        data,
-        error
-      } =
-        await sb
+      /*
+      -----------------------------------------------
+      PHOTO
+      -----------------------------------------------
+      */
+
+      const file =
+        document
+        .getElementById("photoFile")
+        .files[0];
+
+
+      if(file){
+
+        try{
+
+          const extension =
+            file.name
+            .split(".")
+            .pop();
+
+
+          const fileName =
+            Date.now() +
+            "_" +
+            Math.random()
+            .toString(36)
+            .substring(2) +
+            "." +
+            extension;
+
+
+          const upload =
+            await supabase
+            .storage
+            .from("photos")
+            .upload(
+              fileName,
+              file,
+              {
+                upsert:false
+              }
+            );
+
+
+          if(!upload.error){
+
+            const publicUrl =
+              supabase
+              .storage
+              .from("photos")
+              .getPublicUrl(fileName);
+
+
+            dataToInsert.photo_url =
+              publicUrl
+              .data
+              .publicUrl;
+
+          }
+
+        }catch(photoError){
+
+          console.warn(
+            "Photo upload সমস্যা:",
+            photoError
+          );
+
+        }
+
+      }
+
+
+      /*
+      -----------------------------------------------
+      INSERT
+      -----------------------------------------------
+      */
+
+      const result =
+        await supabase
         .from("profiles")
-        .insert(insertData)
-        .select()
-        .single();
+        .insert(dataToInsert);
 
 
-      if(error)
-        throw error;
+      if(result.error){
+
+        throw result.error;
+
+      }
 
 
-      message(
+      showMessage(
         adminMsg,
         "✅ Profile সফলভাবে যোগ হয়েছে।",
         "success"
       );
 
+
       profileForm.reset();
 
       await loadProfiles();
+
 
     }catch(error){
 
       console.error(error);
 
-      message(
+      showMessage(
         adminMsg,
-        "❌ Profile যোগ হয়নি: " +
-        error.message,
+        "❌ " + error.message,
         "error"
       );
 
@@ -848,6 +1043,7 @@ profileForm.addEventListener(
 
   }
 );
+
 
 
 /* =====================================================
@@ -859,35 +1055,44 @@ async function loadProfiles(){
   adminProfiles.innerHTML =
     "<p>Profile লোড হচ্ছে...</p>";
 
+
   try{
 
-    const sb = getSupabaseClient();
+    const supabase =
+      getSupabase();
 
-    const {
-      data,
-      error
-    } =
-      await sb
+
+    const result =
+      await supabase
       .from("profiles")
       .select("*")
-      .order("id",{ascending:false});
+      .order("id",{
+        ascending:false
+      });
 
-    if(error)
-      throw error;
+
+    if(result.error){
+
+      throw result.error;
+
+    }
+
 
     window.allProfiles =
-      data || [];
+      result.data || [];
+
 
     renderProfiles(
       window.allProfiles
     );
+
 
   }catch(error){
 
     console.error(error);
 
     adminProfiles.innerHTML = `
-      <div class="empty">
+      <div class="error">
         ❌ Profile লোড করা যায়নি।
         <br><br>
         ${escapeHtml(error.message)}
@@ -899,13 +1104,14 @@ async function loadProfiles(){
 }
 
 
+
 /* =====================================================
-   RENDER
+   RENDER PROFILES
 ===================================================== */
 
 function renderProfiles(list){
 
-  if(!list.length){
+  if(!list || !list.length){
 
     adminProfiles.innerHTML =
       '<div class="empty">কোনো Profile পাওয়া যায়নি।</div>';
@@ -916,57 +1122,74 @@ function renderProfiles(list){
 
 
   adminProfiles.innerHTML =
-    list.map(function(p){
+    list.map(function(profile){
+
+      const id =
+        String(profile.id);
+
 
       const father =
-        p.father_husband ||
-        p.father ||
+        profile.father_husband ||
+        profile.father ||
         "—";
+
 
       const address =
-        p.address ||
-        p.village ||
+        profile.address ||
+        profile.village ||
         "—";
+
 
       const age =
-        p.age == null
+        profile.age == null
           ? "—"
-          : p.age + " বছর";
+          : profile.age + " বছর";
+
 
       const date =
-        p.death_date ||
+        profile.death_date ||
         "—";
 
-      const cause =
-        p.death_reason ||
-        p.death_cause ||
+
+      const reason =
+        profile.death_reason ||
+        profile.death_cause ||
         "";
+
+
+      let photoHTML = "";
+
+      if(profile.photo_url){
+
+        photoHTML = `
+
+          <img
+            class="profile-photo"
+            src="${escapeAttr(profile.photo_url)}"
+            alt=""
+            onerror="this.style.display='none'"
+          >
+
+        `;
+
+      }
 
 
       return `
 
         <div class="profile">
 
-          ${
-            p.photo_url
-            ?
-            `<img
-              class="photo"
-              src="${escapeAttr(p.photo_url)}"
-              alt="${escapeAttr(p.name || "")}"
-              onerror="this.style.display='none'"
-            >`
-            :
-            ""
-          }
+          ${photoHTML}
+
 
           <div class="profile-name">
-            ${escapeHtml(p.name || "নাম নেই")}
+            ${escapeHtml(profile.name || "নাম নেই")}
           </div>
+
 
           <div class="profile-info">
 
-            পিতা/স্বামী:
+            পিতা / স্বামী:
             ${escapeHtml(father)}
             <br>
 
@@ -982,10 +1205,13 @@ function renderProfiles(list){
             ${escapeHtml(date)}
 
             ${
-              cause
+              reason
               ?
-              `<br>মৃত্যুর কারণ:
-               ${escapeHtml(cause)}`
+              `
+              <br>
+              মৃত্যুর কারণ:
+              ${escapeHtml(reason)}
+              `
               :
               ""
             }
@@ -993,18 +1219,28 @@ function renderProfiles(list){
           </div>
 
 
-          <div class="actions">
+
+          <!-- =========================================
+               TWO SEPARATE BUTTONS
+          ========================================== -->
+
+          <div class="profile-buttons">
 
             <button
-              class="primary"
-              onclick="editProfile('${escapeAttr(String(p.id))}')"
+              type="button"
+              class="edit-button"
+              data-action="edit"
+              data-id="${escapeAttr(id)}"
             >
               ✏️ Edit
             </button>
 
+
             <button
-              class="danger"
-              onclick="deleteProfile('${escapeAttr(String(p.id))}')"
+              type="button"
+              class="delete-button"
+              data-action="delete"
+              data-id="${escapeAttr(id)}"
             >
               🗑️ Delete
             </button>
@@ -1012,67 +1248,101 @@ function renderProfiles(list){
           </div>
 
 
+
+          <!-- =========================================
+               EDIT BOX
+          ========================================== -->
+
           <div
-            id="edit-${escapeAttr(String(p.id))}"
+            id="editBox-${escapeAttr(id)}"
             class="edit-box hidden"
           >
 
-            <label>নাম</label>
+            <div class="edit-title">
+              ✏️ Profile Edit করুন
+            </div>
+
+
+            <label>
+              নাম
+            </label>
 
             <input
-              id="edit-name-${escapeAttr(String(p.id))}"
-              value="${escapeAttr(p.name || "")}"
+              id="editName-${escapeAttr(id)}"
+              value="${escapeAttr(profile.name || "")}"
             >
 
-            <label>পিতা / স্বামী</label>
+
+            <label>
+              পিতা / স্বামীর নাম
+            </label>
 
             <input
-              id="edit-father-${escapeAttr(String(p.id))}"
+              id="editFather-${escapeAttr(id)}"
               value="${escapeAttr(father === "—" ? "" : father)}"
             >
 
-            <label>ঠিকানা</label>
+
+            <label>
+              ঠিকানা / গ্রাম
+            </label>
 
             <input
-              id="edit-address-${escapeAttr(String(p.id))}"
+              id="editAddress-${escapeAttr(id)}"
               value="${escapeAttr(address === "—" ? "" : address)}"
             >
 
-            <label>বয়স</label>
+
+            <label>
+              বয়স
+            </label>
 
             <input
-              id="edit-age-${escapeAttr(String(p.id))}"
+              id="editAge-${escapeAttr(id)}"
               type="number"
-              value="${p.age == null ? "" : escapeAttr(String(p.age))}"
+              min="0"
+              value="${profile.age == null ? "" : escapeAttr(String(profile.age))}"
             >
 
-            <label>মৃত্যুর তারিখ</label>
+
+            <label>
+              মৃত্যুর তারিখ
+            </label>
 
             <input
-              id="edit-date-${escapeAttr(String(p.id))}"
+              id="editDate-${escapeAttr(id)}"
               type="date"
-              value="${escapeAttr(p.death_date || "")}"
+              value="${escapeAttr(profile.death_date || "")}"
             >
 
-            <label>মৃত্যুর কারণ</label>
+
+            <label>
+              মৃত্যুর কারণ
+            </label>
 
             <textarea
-              id="edit-cause-${escapeAttr(String(p.id))}"
-            >${escapeHtml(cause)}</textarea>
+              id="editReason-${escapeAttr(id)}"
+            >${escapeHtml(reason)}</textarea>
 
 
-            <div class="actions">
+
+            <div class="edit-buttons">
 
               <button
+                type="button"
                 class="primary"
-                onclick="saveEdit('${escapeAttr(String(p.id))}')"
+                data-action="save"
+                data-id="${escapeAttr(id)}"
               >
                 💾 Save Changes
               </button>
 
+
               <button
+                type="button"
                 class="secondary"
-                onclick="cancelEdit('${escapeAttr(String(p.id))}')"
+                data-action="cancel"
+                data-id="${escapeAttr(id)}"
               >
                 Cancel
               </button>
@@ -1087,165 +1357,41 @@ function renderProfiles(list){
 
     }).join("");
 
+
 }
 
 
-/* =====================================================
-   EDIT PROFILE
-===================================================== */
-
-window.editProfile =
-function(id){
-
-  const box =
-    document.getElementById(
-      "edit-" + id
-    );
-
-  if(!box)
-    return;
-
-  box.classList.toggle("hidden");
-
-};
-
 
 /* =====================================================
-   CANCEL EDIT
+   BUTTON EVENT HANDLER
+   এখানে একসাথে touch হওয়ার সমস্যা থাকবে না।
 ===================================================== */
 
-window.cancelEdit =
-function(id){
+adminProfiles.addEventListener(
+  "click",
+  function(event){
 
-  const box =
-    document.getElementById(
-      "edit-" + id
-    );
-
-  if(box)
-    box.classList.add("hidden");
-
-};
+    const button =
+      event.target.closest("button[data-action]");
 
 
-/* =====================================================
-   SAVE EDIT
-===================================================== */
-
-window.saveEdit =
-async function(id){
-
-  try{
-
-    const sb = getSupabaseClient();
-
-
-    const name =
-      document.getElementById(
-        "edit-name-" + id
-      ).value.trim();
-
-    if(!name){
-
-      alert("নাম দিতে হবে।");
+    if(!button){
 
       return;
 
     }
 
 
-    const father =
-      document.getElementById(
-        "edit-father-" + id
-      ).value.trim();
+    const action =
+      button.dataset.action;
 
 
-    const address =
-      document.getElementById(
-        "edit-address-" + id
-      ).value.trim();
+    const id =
+      button.dataset.id;
 
 
-    const ageValue =
-      document.getElementById(
-        "edit-age-" + id
-      ).value;
+    /*
+    Edit
+    */
 
-
-    const date =
-      document.getElementById(
-        "edit-date-" + id
-      ).value || null;
-
-
-    const cause =
-      document.getElementById(
-        "edit-cause-" + id
-      ).value.trim();
-
-
-    const age =
-      ageValue === ""
-        ? null
-        : Number(ageValue);
-
-
-    const updateData = {
-
-      name:name,
-
-      father_husband:
-        father || null,
-
-      address:
-        address || null,
-
-      age:age,
-
-      death_date:
-        date,
-
-      death_reason:
-        cause || null
-
-    };
-
-
-    const {
-      data,
-      error
-    } =
-      await sb
-      .from("profiles")
-      .update(updateData)
-      .eq("id",id)
-      .select();
-
-
-    if(error)
-      throw error;
-
-
-    if(!data || !data.length){
-
-      throw new Error(
-        "Update হয়েছে বলে Supabase কোনো row ফেরত দেয়নি। RLS policy পরীক্ষা করুন।"
-      );
-
-    }
-
-
-    alert(
-      "✅ Profile সফলভাবে Update হয়েছে।"
-    );
-
-
-    await loadProfiles();
-
-  }catch(error){
-
-    console.error(error);
-
-    alert(
-      "❌ Edit/Update সমস্যা:\n\n" +
-      error.me
+    if(action ==
