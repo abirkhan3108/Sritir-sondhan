@@ -44,12 +44,22 @@ function esc(s=''){
   }[c]));
 }
 function dateBn(v){
-  if(!v)return '—';
-  const d=new Date(v+'T00:00:00');
-  if(Number.isNaN(d.getTime()))return esc(v);
-  return new Intl.DateTimeFormat('bn-BD',{
-    day:'numeric',month:'long',year:'numeric'
+  if(!v) return '-';
+
+  const d = new Date(v + 'T00:00:00');
+  if(Number.isNaN(d.getTime())) return esc(v);
+
+  const date = new Intl.DateTimeFormat('bn-BD',{
+    day:'2-digit',
+    month:'2-digit',
+    year:'numeric'
   }).format(d);
+
+  const day = new Intl.DateTimeFormat('bn-BD',{
+    weekday:'long'
+  }).format(d);
+
+  return `${date}, ${day}`;
 }
 function img(src,name){
   return src
