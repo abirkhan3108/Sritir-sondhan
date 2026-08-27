@@ -1,0 +1,17 @@
+{
+  "name": "smriti-sondhan-admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "স্মৃতি সংরক্ষণ Admin Dashboard Android app",
+  "scripts": {
+    "build": "node -e \"require('fs').mkdirSync('www',{recursive:true}); require('fs').copyFileSync('admin.html','www/index.html'); require('fs').copyFileSync('config.js','www/config.js'); require('fs').copyFileSync('logo.png','www/logo.png')\""
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@supabase/supabase-js": "^2.57.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}

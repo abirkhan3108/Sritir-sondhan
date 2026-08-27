@@ -133,7 +133,7 @@ $('loginForm').addEventListener('submit',async e=>{
 $('logout').addEventListener('click',async()=>{const {error}=await sb.auth.signOut();if(error)show(error.message,true)});
 
 async function loadPeople(){
- const {data,error}=await sb.from('persons').select('*').order('created_at',{ascending:false});
+ const {data,error}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
  if(error){$('list').innerHTML='<p class="small">টেবিল/সংযোগ ঠিক করা হয়নি। supabase_setup.sql চালান।</p>';return}
  people=data||[];render();
 }
@@ -143,7 +143,7 @@ function render(){
  if(!rows.length){$('list').innerHTML='<p class="small">কোনো তথ্য পাওয়া যায়নি।</p>';return}
  $('list').innerHTML=rows.map(p=>`<div class="person">
  <img src="${p.photo_url||''}" onerror="this.style.visibility='hidden'">
- <div class="info"><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.address||'')}</p><p class="small">${p.death_date? 'মৃত্যু: '+p.death_date:''}</p></div>
+ <div class="info"><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.village||'')}</p><p class="small">${p.death_date? 'মৃত্যু: '+p.death_date:''}</p></div>
  <div class="row"><button class="secondary" onclick="editPerson('${p.id}')">✏️</button><button class="danger" onclick="deletePerson('${p.id}')">🗑️</button></div>
  </div>`).join('');
 }
@@ -154,9 +154,9 @@ async function uploadPhoto(file,id){
  if(!file)return null;
  const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
  const path=`${id}.${ext}`;
- const up=await sb.storage.from('person-person-photos').upload(path,file,{upsert:true,contentType:file.type});
+ const up=await sb.storage.from('person-photos').upload(path,file,{upsert:true,contentType:file.type});
  if(up.error) throw up.error;
- return sb.storage.from('person-person-photos').getPublicUrl(path).data.publicUrl;
+ return sb.storage.from('person-photos').getPublicUrl(path).data.publicUrl;
 }
 $('personForm').addEventListener('submit',async e=>{
  e.preventDefault();
@@ -167,18 +167,18 @@ $('personForm').addEventListener('submit',async e=>{
   let photo_url=people.find(p=>p.id===id)?.photo_url||null;
   if(file) photo_url=await uploadPhoto(file,id);
   const obj={id,name:$('name').value.trim(),birth_date:$('birthDate').value||null,death_date:$('deathDate').value||null,address:$('address').value.trim(),family_info:$('family').value.trim(),bio:$('bio').value.trim(),memory:$('memory').value.trim(),photo_url};
-  const {error}=await sb.from('persons').upsert(obj);
+  const {error}=await sb.from('profiles').upsert(obj);
   if(error)throw error;
   show(editing?'তথ্য আপডেট হয়েছে।':'নতুন ব্যক্তি যোগ হয়েছে।');resetForm();await loadPeople();
  }catch(err){show(err.message||'সংরক্ষণ করা যায়নি',true)}
 });
 function editPerson(id){
  const p=people.find(x=>x.id===id);if(!p)return;editing=id;
- $('formTitle').textContent='✏️ তথ্য সম্পাদনা';$('personId').value=id;$('name').value=p.name||'';$('birthDate').value=p.birth_date||'';$('deathDate').value=p.death_date||'';$('address').value=p.address||'';$('family').value=p.family_info||'';$('bio').value=p.bio||'';$('memory').value=p.memory||'';window.scrollTo({top:0,behavior:'smooth'});
+ $('formTitle').textContent='✏️ তথ্য সম্পাদনা';$('personId').value=id;$('name').value=p.name||'';$('birthDate').value=p.birth_date||'';$('deathDate').value=p.death_date||'';$('address').value=p.village||'';$('family').value=p.family_info||'';$('bio').value=p.bio||'';$('memory').value=p.memory||'';window.scrollTo({top:0,behavior:'smooth'});
 }
 async function deletePerson(id){
  if(!confirm('এই ব্যক্তির তথ্য মুছে ফেলবেন?'))return;
- const {error}=await sb.from('persons').delete().eq('id',id);
+ const {error}=await sb.from('profiles').delete().eq('id',id);
  if(error){show(error.message,true);return}show('তথ্য মুছে ফেলা হয়েছে।');await loadPeople();
 }
 function resetForm(){editing=null;$('personForm').reset();$('formTitle').textContent='➕ নতুন ব্যক্তি যোগ করুন';$('preview').style.display='none'}
