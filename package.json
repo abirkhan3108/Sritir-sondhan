@@ -1,17 +1,20 @@
 {
-  "name": "smriti-sondhan-admin",
+  "name": "smriti-sangrokkhon",
   "version": "1.0.0",
   "private": true,
-  "description": "স্মৃতি সংরক্ষণ Admin Dashboard Android app",
   "scripts": {
-    "build": "node -e \"require('fs').mkdirSync('www',{recursive:true}); require('fs').copyFileSync('admin.html','www/index.html'); require('fs').copyFileSync('config.js','www/config.js'); require('fs').copyFileSync('logo.png','www/logo.png')\""
+    "build": "rm -rf www && mkdir -p www && cp *.html *.js *.css www/",
+    "sync": "npx cap sync android",
+    "open:android": "npx cap open android",
+    "icons": "npx capacitor-assets generate --android"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3",
-    "@supabase/supabase-js": "^2.57.4"
+    "@capacitor/core": "latest",
+    "@capacitor/android": "latest"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3"
+    "@capacitor/cli": "latest",
+    "@capacitor/assets": "^3.0.5",
+    "typescript": "^5.9.2"
   }
 }
