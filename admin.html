@@ -4,24 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
+<title>স্মৃতি সংরক্ষণ — Admin</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Noto Sans Bengali",
-    sans-serif;
-  background:#f3f7fc;
+  font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;
+  background:#f4f7fb;
   color:#172033;
 }
 
@@ -33,69 +26,37 @@ body{
 }
 
 .card{
-  background:#fff;
+  background:white;
   border-radius:18px;
   padding:18px;
   margin-bottom:18px;
   box-shadow:0 3px 18px rgba(0,0,0,.08);
 }
 
-.header{
-  background:#fff;
-  border-radius:18px;
-  padding:18px;
-  margin-bottom:18px;
-  box-shadow:0 3px 18px rgba(0,0,0,.08);
-}
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-
-h1{
-  margin:0;
-  font-size:25px;
-}
-
-h2{
-  margin:0 0 15px;
-  font-size:21px;
-}
+h1{margin:0 0 5px;font-size:25px}
+h2{margin-top:0;font-size:21px}
 
 .subtitle{
-  color:#687386;
-  margin-top:4px;
+  color:#667085;
 }
 
 label{
   display:block;
-  font-weight:700;
   margin:12px 0 6px;
+  font-weight:700;
 }
 
-input,
-textarea,
-button{
+input,textarea,button{
   font:inherit;
 }
 
-input,
-textarea{
+input,textarea{
   width:100%;
-  border:1px solid #d7dee8;
+  padding:13px;
+  border:1px solid #d7dce5;
   border-radius:11px;
-  padding:12px;
+  background:white;
   outline:none;
-  background:#fff;
-}
-
-input:focus,
-textarea:focus{
-  border-color:#1261d6;
-  box-shadow:0 0 0 3px rgba(18,97,214,.10);
 }
 
 textarea{
@@ -103,35 +64,39 @@ textarea{
   resize:vertical;
 }
 
+input:focus,textarea:focus{
+  border-color:#1264d8;
+}
+
 button{
   border:0;
   border-radius:11px;
-  padding:11px 16px;
+  padding:12px 18px;
   font-weight:800;
   cursor:pointer;
 }
 
 .primary{
-  background:#1261d6;
-  color:#fff;
+  background:#0866d8;
+  color:white;
 }
 
 .secondary{
   background:#e9edf3;
-  color:#222;
+  color:#172033;
 }
 
 .danger{
-  background:#df2944;
-  color:#fff;
+  background:#df2945;
+  color:white;
 }
 
 .success{
-  color:#128548;
+  color:#138a4b;
 }
 
 .error{
-  color:#d7263d;
+  color:#d9233e;
 }
 
 .hidden{
@@ -144,41 +109,15 @@ button{
   font-weight:700;
 }
 
-.stats{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-.stat{
-  background:#f5f7fa;
-  border-radius:14px;
-  padding:16px;
-  text-align:center;
-}
-
-.stat-number{
-  display:block;
-  font-size:29px;
-  font-weight:900;
-}
-
-.stat-label{
-  color:#687386;
-  font-size:14px;
-}
-
-.search-row{
+.topbar{
   display:flex;
-  gap:8px;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
 }
 
-.search-row input{
-  flex:1;
-}
-
-.profile-item{
-  border:1px solid #dce3ec;
+.profile{
+  border:1px solid #dfe5ee;
   border-radius:16px;
   padding:15px;
   margin-bottom:12px;
@@ -186,146 +125,81 @@ button{
 }
 
 .profile-name{
-  font-size:20px;
+  font-size:21px;
   font-weight:900;
-  margin-bottom:4px;
+  margin-bottom:5px;
 }
 
 .profile-info{
-  color:#687386;
-  line-height:1.75;
-  font-size:14px;
+  color:#667085;
+  line-height:1.8;
 }
 
-.profile-actions{
+.actions{
   display:flex;
-  gap:8px;
+  gap:10px;
   margin-top:12px;
   flex-wrap:wrap;
 }
 
-.profile-actions button{
-  min-width:110px;
+.actions button{
+  min-width:120px;
 }
 
-.profile-photo{
-  width:85px;
-  height:85px;
+.photo{
+  width:110px;
+  height:110px;
   object-fit:cover;
   border-radius:12px;
   margin-bottom:10px;
-  border:1px solid #ddd;
+  display:block;
 }
 
-.photo-preview{
-  width:130px;
-  height:130px;
-  object-fit:cover;
-  border-radius:12px;
-  margin-top:10px;
-  display:none;
-}
-
-.login-box{
-  max-width:500px;
-  margin:45px auto;
-}
-
-/* Modal */
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  z-index:9999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:15px;
-}
-
-.modal.show{
-  display:flex;
-}
-
-.modal-box{
-  background:#fff;
-  width:100%;
-  max-width:600px;
-  max-height:90vh;
-  overflow:auto;
-  border-radius:18px;
-  padding:20px;
-}
-
-.modal-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:8px;
-}
-
-.close-btn{
-  background:#eee;
-  color:#222;
-  padding:8px 12px;
-}
-
-.modal-actions{
+.search{
   display:flex;
   gap:8px;
-  margin-top:18px;
 }
 
-.modal-actions button{
+.search input{
   flex:1;
 }
 
-.loading{
-  text-align:center;
+.empty{
   padding:20px;
-  color:#687386;
+  text-align:center;
+  color:#667085;
+}
+
+.edit-box{
+  background:#f7faff;
+  border:2px solid #bcd7ff;
+  border-radius:16px;
+  padding:15px;
+  margin-top:15px;
+}
+
+.login{
+  max-width:500px;
+  margin:50px auto;
 }
 
 @media(max-width:600px){
-
-  .container{
-    padding:10px;
-  }
-
-  .card,
-  .header{
-    padding:14px;
-    border-radius:14px;
-  }
-
-  h1{
-    font-size:22px;
-  }
-
-  .search-row{
-    flex-direction:column;
-  }
-
-  .search-row button{
-    width:100%;
-  }
+  .container{padding:10px}
 
   .topbar{
     align-items:flex-start;
   }
 
-  .profile-actions{
-    flex-direction:row;
+  .search{
+    flex-direction:column;
   }
 
-  .profile-actions button{
+  .search button{
+    width:100%;
+  }
+
+  .actions button{
     flex:1;
-  }
-
-  .stats{
-    grid-template-columns:1fr 1fr;
   }
 }
 </style>
@@ -333,12 +207,9 @@ button{
 
 <body>
 
-<!-- ================= LOGIN ================= -->
-
+<!-- LOGIN -->
 <section id="loginSection">
-
-  <div class="container login-box">
-
+  <div class="container login">
     <div class="card">
 
       <h1>🔐 Admin Login</h1>
@@ -349,34 +220,28 @@ button{
 
       <form id="loginForm">
 
-        <label for="email">
-          Email
-        </label>
+        <label>Email</label>
 
         <input
           id="email"
           type="email"
           placeholder="Admin Email"
-          autocomplete="username"
           required
         >
 
-        <label for="password">
-          Password
-        </label>
+        <label>Password</label>
 
         <input
           id="password"
           type="password"
           placeholder="Password"
-          autocomplete="current-password"
           required
         >
 
         <button
           type="submit"
           class="primary"
-          style="width:100%;margin-top:16px;"
+          style="width:100%;margin-top:16px"
         >
           🔐 Login
         </button>
@@ -386,36 +251,28 @@ button{
       <div id="loginMsg" class="message"></div>
 
     </div>
-
   </div>
-
 </section>
 
 
-<!-- ================= ADMIN PANEL ================= -->
-
+<!-- ADMIN -->
 <main id="adminPanel" class="hidden">
 
 <div class="container">
 
   <!-- HEADER -->
-
-  <div class="header">
+  <div class="card">
 
     <div class="topbar">
 
       <div>
         <h1>স্মৃতি সংরক্ষণ</h1>
-
-        <div class="subtitle">
-          Admin Dashboard
-        </div>
+        <div class="subtitle">Admin Dashboard</div>
       </div>
 
       <button
         id="logoutBtn"
         class="secondary"
-        type="button"
       >
         Logout
       </button>
@@ -425,94 +282,36 @@ button{
   </div>
 
 
-  <!-- STATS -->
-
-  <div class="card">
-
-    <h2>📊 Dashboard</h2>
-
-    <div class="stats">
-
-      <div class="stat">
-
-        <span
-          id="dashTotal"
-          class="stat-number"
-        >
-          0
-        </span>
-
-        <span class="stat-label">
-          মোট Profile
-        </span>
-
-      </div>
-
-      <div class="stat">
-
-        <span
-          id="dashMonthly"
-          class="stat-number"
-        >
-          0
-        </span>
-
-        <span class="stat-label">
-          এই মাসে যোগ
-        </span>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
   <!-- ADD PROFILE -->
-
   <div class="card">
 
     <h2>➕ নতুন Profile যোগ করুন</h2>
 
     <form id="profileForm">
 
-      <label for="name">
-        নাম *
-      </label>
+      <label>নাম *</label>
 
       <input
         id="name"
-        type="text"
         required
         placeholder="নাম লিখুন"
       >
 
-
-      <label for="father_spouse">
-        পিতা / স্বামীর নাম
-      </label>
+      <label>পিতা / স্বামীর নাম</label>
 
       <input
-        id="father_spouse"
-        type="text"
+        id="father"
         placeholder="পিতা / স্বামীর নাম"
       >
 
-
-      <label for="village">
-        গ্রাম
-      </label>
+      <label>ঠিকানা / গ্রাম</label>
 
       <input
-        id="village"
-        type="text"
-        placeholder="গ্রামের নাম"
+        id="address"
+        placeholder="গ্রাম / ঠিকানা"
       >
 
-
-      <label for="age">
-        বয়স
-      </label>
+      <label>বয়স</label>
 
       <input
         id="age"
@@ -521,30 +320,21 @@ button{
         placeholder="বয়স"
       >
 
-
-      <label for="death_reason">
-        মৃত্যুর কারণ
-      </label>
-
-      <textarea
-        id="death_reason"
-        placeholder="মৃত্যুর কারণ লিখুন"
-      ></textarea>
-
-
-      <label for="death_date">
-        মৃত্যুর তারিখ
-      </label>
+      <label>মৃত্যুর তারিখ</label>
 
       <input
         id="death_date"
         type="date"
       >
 
+      <label>মৃত্যুর কারণ</label>
 
-      <label for="photoFile">
-        ছবি
-      </label>
+      <textarea
+        id="death_reason"
+        placeholder="মৃত্যুর কারণ"
+      ></textarea>
+
+      <label>ছবি</label>
 
       <input
         id="photoFile"
@@ -552,18 +342,10 @@ button{
         accept="image/*"
       >
 
-      <img
-        id="photoPreview"
-        class="photo-preview"
-        alt="Photo preview"
-      >
-
-
       <button
-        id="saveProfileBtn"
         type="submit"
         class="primary"
-        style="margin-top:16px;width:100%;"
+        style="width:100%;margin-top:16px"
       >
         💾 Profile সংরক্ষণ করুন
       </button>
@@ -576,22 +358,19 @@ button{
 
 
   <!-- SEARCH -->
-
   <div class="card">
 
     <h2>🔎 Profile Search</h2>
 
-    <div class="search-row">
+    <div class="search">
 
       <input
         id="adminSearch"
-        type="search"
         placeholder="নাম দিয়ে খুঁজুন..."
       >
 
       <button
         id="adminSearchBtn"
-        type="button"
         class="primary"
       >
         🔎 Search
@@ -602,16 +381,13 @@ button{
   </div>
 
 
-  <!-- PROFILE LIST -->
-
+  <!-- PROFILES -->
   <div class="card">
 
     <h2>👥 Profiles</h2>
 
     <div id="adminProfiles">
-      <div class="loading">
-        Profile লোড হচ্ছে...
-      </div>
+      Profile লোড হচ্ছে...
     </div>
 
   </div>
@@ -621,196 +397,59 @@ button{
 </main>
 
 
-<!-- ================= EDIT MODAL ================= -->
-
-<div
-  id="editModal"
-  class="modal"
->
-
-  <div class="modal-box">
-
-    <div class="modal-header">
-
-      <h2>
-        ✏️ Profile Edit
-      </h2>
-
-      <button
-        id="closeEditBtn"
-        type="button"
-        class="close-btn"
-      >
-        ✕
-      </button>
-
-    </div>
-
-
-    <form id="editForm">
-
-      <input
-        id="editId"
-        type="hidden"
-      >
-
-
-      <label for="editName">
-        নাম *
-      </label>
-
-      <input
-        id="editName"
-        type="text"
-        required
-      >
-
-
-      <label for="editFather">
-        পিতা / স্বামীর নাম
-      </label>
-
-      <input
-        id="editFather"
-        type="text"
-      >
-
-
-      <label for="editVillage">
-        গ্রাম
-      </label>
-
-      <input
-        id="editVillage"
-        type="text"
-      >
-
-
-      <label for="editAge">
-        বয়স
-      </label>
-
-      <input
-        id="editAge"
-        type="number"
-        min="0"
-      >
-
-
-      <label for="editReason">
-        মৃত্যুর কারণ
-      </label>
-
-      <textarea
-        id="editReason"
-      ></textarea>
-
-
-      <label for="editDate">
-        মৃত্যুর তারিখ
-      </label>
-
-      <input
-        id="editDate"
-        type="date"
-      >
-
-
-      <div
-        id="editCurrentPhoto"
-        style="margin-top:12px;"
-      ></div>
-
-
-      <label for="editPhoto">
-        নতুন ছবি
-      </label>
-
-      <input
-        id="editPhoto"
-        type="file"
-        accept="image/*"
-      >
-
-
-      <img
-        id="editPhotoPreview"
-        class="photo-preview"
-        alt="Preview"
-      >
-
-
-      <div class="modal-actions">
-
-        <button
-          type="button"
-          id="cancelEditBtn"
-          class="secondary"
-        >
-          বাতিল
-        </button>
-
-        <button
-          type="submit"
-          class="primary"
-        >
-          💾 পরিবর্তন সংরক্ষণ
-        </button>
-
-      </div>
-
-    </form>
-
-    <div
-      id="editMsg"
-      class="message"
-    ></div>
-
-  </div>
-
-</div>
-
-
-<!-- ================= CONFIG ================= -->
-
+<!-- CONFIG -->
 <script src="config.js"></script>
 
 
 <script>
-"use strict";
 
-/* =========================================================
-   SUPABASE
-========================================================= */
+/* =====================================================
+   SUPABASE CONNECTION
+===================================================== */
 
-let db = null;
+let client = null;
 
-const TABLE = "profiles";
+function getSupabaseClient(){
 
-/*
-  তোমার Supabase SQL অনুযায়ী আসল bucket:
-  person-photos
-*/
-const BUCKET = "person-photos";
+  if(client) return client;
 
+  /*
+   তোমার config.js-এ নিচের যেকোনো সাধারণ নাম থাকলেও
+   সেটি ধরার চেষ্টা করবে।
+  */
 
-if (
-  window.supabase &&
-  window.SUPABASE_URL &&
-  window.SUPABASE_ANON_KEY
-) {
+  const url =
+    window.SUPABASE_URL ||
+    window.supabaseUrl ||
+    window.SUPABASE_PROJECT_URL;
 
-  db = window.supabase.createClient(
-    window.SUPABASE_URL,
-    window.SUPABASE_ANON_KEY
-  );
+  const key =
+    window.SUPABASE_ANON_KEY ||
+    window.supabaseKey ||
+    window.SUPABASE_KEY ||
+    window.SUPABASE_PUBLISHABLE_KEY;
 
+  if(!url || !key){
+
+    alert(
+      "Supabase config পাওয়া যায়নি। config.js পরীক্ষা করুন।"
+    );
+
+    throw new Error(
+      "Supabase URL অথবা Key পাওয়া যায়নি"
+    );
+  }
+
+  client =
+    window.supabase.createClient(url,key);
+
+  return client;
 }
 
 
-/* =========================================================
+/* =====================================================
    ELEMENTS
-========================================================= */
+===================================================== */
 
 const loginSection =
   document.getElementById("loginSection");
@@ -842,544 +481,78 @@ const adminSearch =
 const adminSearchBtn =
   document.getElementById("adminSearchBtn");
 
-const dashTotal =
-  document.getElementById("dashTotal");
 
-const dashMonthly =
-  document.getElementById("dashMonthly");
-
-const photoFile =
-  document.getElementById("photoFile");
-
-const photoPreview =
-  document.getElementById("photoPreview");
-
-const editModal =
-  document.getElementById("editModal");
-
-const editForm =
-  document.getElementById("editForm");
-
-const editMsg =
-  document.getElementById("editMsg");
-
-const editPhoto =
-  document.getElementById("editPhoto");
-
-const editPhotoPreview =
-  document.getElementById("editPhotoPreview");
-
-const editCurrentPhoto =
-  document.getElementById("editCurrentPhoto");
-
-
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
-
-function escapeHTML(value) {
-
-  return String(value ?? "")
-    .replace(/[&<>"']/g, function(char) {
-
-      return {
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#039;"
-      }[char];
-
-    });
-
-}
-
-
-/* =========================================================
-   DATE FORMAT
-========================================================= */
-
-function formatDate(value) {
-
-  if (!value) {
-    return "—";
-  }
-
-  const d = new Date(value + "T00:00:00");
-
-  if (Number.isNaN(d.getTime())) {
-    return escapeHTML(value);
-  }
-
-  return new Intl.DateTimeFormat(
-    "bn-BD",
-    {
-      day:"numeric",
-      month:"long",
-      year:"numeric"
-    }
-  ).format(d);
-
-}
-
-
-/* =========================================================
+/* =====================================================
    MESSAGE
-========================================================= */
+===================================================== */
 
-function showAdminMessage(text, type) {
+function message(el,text,type=""){
 
-  adminMsg.textContent = text;
+  el.textContent = text;
 
-  adminMsg.className =
+  el.className =
     "message " +
-    (type === "error"
-      ? "error"
-      : "success");
+    (type==="error" ? "error" : "") +
+    (type==="success" ? "success" : "");
 
 }
 
 
-/* =========================================================
-   AUTH
-========================================================= */
-
-async function checkLogin() {
-
-  if (!db) {
-
-    loginMsg.textContent =
-      "❌ Supabase config.js পাওয়া যাচ্ছে না।";
-
-    loginSection.classList.remove("hidden");
-    adminPanel.classList.add("hidden");
-
-    return;
-  }
-
-
-  const {
-    data,
-    error
-  } = await db.auth.getSession();
-
-
-  if (error) {
-
-    console.error(error);
-
-    loginMsg.textContent =
-      "❌ Session যাচাই করা যায়নি: " +
-      error.message;
-
-    return;
-  }
-
-
-  if (data.session) {
-
-    loginSection.classList.add("hidden");
-
-    adminPanel.classList.remove("hidden");
-
-    await loadProfiles();
-
-    await updateStats();
-
-  } else {
-
-    loginSection.classList.remove("hidden");
-
-    adminPanel.classList.add("hidden");
-
-  }
-
-}
-
-
-/* =========================================================
+/* =====================================================
    LOGIN
-========================================================= */
+===================================================== */
 
 loginForm.addEventListener(
   "submit",
-  async function(e) {
+  async function(e){
 
     e.preventDefault();
 
-    loginMsg.textContent =
-      "লগইন হচ্ছে...";
-
-    if (!db) {
-
-      loginMsg.textContent =
-        "❌ Supabase config পাওয়া যাচ্ছে না।";
-
-      return;
-    }
-
-
-    const email =
-      document.getElementById("email")
-      .value
-      .trim();
-
-    const password =
-      document.getElementById("password")
-      .value;
-
-
-    const {
-      error
-    } =
-      await db.auth.signInWithPassword({
-        email,
-        password
-      });
-
-
-    if (error) {
-
-      loginMsg.textContent =
-        "❌ " + error.message;
-
-      return;
-    }
-
-
-    loginMsg.textContent =
-      "✅ Login সফল";
-
-    await checkLogin();
-
-  }
-);
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-logoutBtn.addEventListener(
-  "click",
-  async function() {
-
-    if (db) {
-
-      await db.auth.signOut();
-
-    }
-
-    adminPanel.classList.add("hidden");
-
-    loginSection.classList.remove("hidden");
-
-    loginMsg.textContent =
-      "Logout হয়েছে।";
-
-  }
-);
-
-
-/* =========================================================
-   PHOTO PREVIEW
-========================================================= */
-
-photoFile.addEventListener(
-  "change",
-  function() {
-
-    const file =
-      photoFile.files &&
-      photoFile.files[0];
-
-
-    if (!file) {
-
-      photoPreview.style.display = "none";
-
-      photoPreview.removeAttribute("src");
-
-      return;
-    }
-
-
-    if (file.size > 5 * 1024 * 1024) {
-
-      alert(
-        "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন।"
-      );
-
-      photoFile.value = "";
-
-      photoPreview.style.display = "none";
-
-      return;
-    }
-
-
-    photoPreview.src =
-      URL.createObjectURL(file);
-
-    photoPreview.style.display =
-      "block";
-
-  }
-);
-
-
-/* =========================================================
-   UPLOAD PHOTO
-========================================================= */
-
-async function uploadPhoto(file) {
-
-  if (!file) {
-    return null;
-  }
-
-
-  if (file.size > 5 * 1024 * 1024) {
-
-    throw new Error(
-      "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন।"
+    message(
+      loginMsg,
+      "Login হচ্ছে..."
     );
 
-  }
+    try{
 
+      const sb = getSupabaseClient();
 
-  const extension =
-    (
-      file.name
-        .split(".")
-        .pop() || "jpg"
-    )
-    .toLowerCase();
+      const email =
+        document.getElementById("email").value.trim();
 
+      const password =
+        document.getElementById("password").value;
 
-  const path =
-    "profiles/" +
-    crypto.randomUUID() +
-    "." +
-    extension;
+      const {data,error} =
+        await sb.auth.signInWithPassword({
+          email,
+          password
+        });
 
-
-  const {
-    error
-  } =
-    await db.storage
-      .from(BUCKET)
-      .upload(
-        path,
-        file,
-        {
-          upsert:false,
-          contentType:file.type
-        }
-      );
-
-
-  if (error) {
-    throw error;
-  }
-
-
-  const {
-    data
-  } =
-    db.storage
-      .from(BUCKET)
-      .getPublicUrl(path);
-
-
-  return data.publicUrl;
-
-}
-
-
-/* =========================================================
-   ADD PROFILE
-========================================================= */
-
-profileForm.addEventListener(
-  "submit",
-  async function(e) {
-
-    e.preventDefault();
-
-    showAdminMessage(
-      "⏳ Profile সংরক্ষণ হচ্ছে...",
-      "success"
-    );
-
-
-    try {
-
-      if (!db) {
-        throw new Error(
-          "Supabase connection পাওয়া যায়নি।"
-        );
-      }
-
-
-      const {
-        data: sessionData
-      } =
-        await db.auth.getSession();
-
-
-      if (!sessionData.session) {
-
-        throw new Error(
-          "আগে Admin Login করুন।"
-        );
-
-      }
-
-
-      const name =
-        document
-          .getElementById("name")
-          .value
-          .trim();
-
-
-      const father =
-        document
-          .getElementById("father_spouse")
-          .value
-          .trim();
-
-
-      const village =
-        document
-          .getElementById("village")
-          .value
-          .trim();
-
-
-      const ageText =
-        document
-          .getElementById("age")
-          .value
-          .trim();
-
-
-      const reason =
-        document
-          .getElementById("death_reason")
-          .value
-          .trim();
-
-
-      const deathDate =
-        document
-          .getElementById("death_date")
-          .value;
-
-
-      if (!name) {
-
-        throw new Error(
-          "নাম দিতে হবে।"
-        );
-
-      }
-
-
-      const age =
-        ageText
-          ? Number(ageText)
-          : null;
-
-
-      let photoUrl = null;
-
-
-      if (
-        photoFile.files &&
-        photoFile.files[0]
-      ) {
-
-        photoUrl =
-          await uploadPhoto(
-            photoFile.files[0]
-          );
-
-      }
-
-
-      /*
-        এখানে Supabase-এর আসল column name ব্যবহার করা হয়েছে।
-      */
-
-      const record = {
-
-        name:name,
-
-        father_spouse:
-          father || null,
-
-        village:
-          village || null,
-
-        age:age,
-
-        death_reason:
-          reason || null,
-
-        death_date:
-          deathDate || null,
-
-        photo_url:
-          photoUrl
-
-      };
-
-
-      const {
-        error
-      } =
-        await db
-          .from(TABLE)
-          .insert(record);
-
-
-      if (error) {
+      if(error)
         throw error;
+
+      if(!data.session){
+
+        throw new Error(
+          "Login session তৈরি হয়নি।"
+        );
+
       }
 
+      loginSection.classList.add("hidden");
 
-      profileForm.reset();
+      adminPanel.classList.remove("hidden");
 
-      photoPreview.style.display =
-        "none";
+      await loadProfiles();
 
-      photoPreview.removeAttribute(
-        "src"
-      );
-
-
-      showAdminMessage(
-        "✅ Profile সফলভাবে যোগ হয়েছে।",
-        "success"
-      );
-
-
-      await loadProfiles(
-        adminSearch.value.trim()
-      );
-
-      await updateStats();
-
-
-    } catch(error) {
+    }catch(error){
 
       console.error(error);
 
-      showAdminMessage(
-        "❌ " +
-        (error.message || error),
+      message(
+        loginMsg,
+        "Login ব্যর্থ: " + error.message,
         "error"
       );
 
@@ -1389,8 +562,690 @@ profileForm.addEventListener(
 );
 
 
-/* =========================================================
-   LOAD PROFILES
-========================================================= */
+/* =====================================================
+   LOGOUT
+===================================================== */
 
-async function
+logoutBtn.addEventListener(
+  "click",
+  async function(){
+
+    try{
+
+      const sb = getSupabaseClient();
+
+      await sb.auth.signOut();
+
+      adminPanel.classList.add("hidden");
+
+      loginSection.classList.remove("hidden");
+
+      loginForm.reset();
+
+      adminProfiles.innerHTML = "";
+
+    }catch(error){
+
+      console.error(error);
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   CHECK EXISTING SESSION
+===================================================== */
+
+async function checkSession(){
+
+  try{
+
+    const sb = getSupabaseClient();
+
+    const {
+      data:{
+        session
+      }
+    } = await sb.auth.getSession();
+
+    if(session){
+
+      loginSection.classList.add("hidden");
+
+      adminPanel.classList.remove("hidden");
+
+      await loadProfiles();
+
+    }else{
+
+      loginSection.classList.remove("hidden");
+
+      adminPanel.classList.add("hidden");
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    message(
+      loginMsg,
+      "Supabase connection সমস্যা: " +
+      error.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   ADD PROFILE
+===================================================== */
+
+profileForm.addEventListener(
+  "submit",
+  async function(e){
+
+    e.preventDefault();
+
+    message(
+      adminMsg,
+      "Profile সংরক্ষণ হচ্ছে..."
+    );
+
+    try{
+
+      const sb = getSupabaseClient();
+
+      const {
+        data:{
+          user
+        }
+      } = await sb.auth.getUser();
+
+      if(!user){
+
+        throw new Error(
+          "Admin login session পাওয়া যায়নি।"
+        );
+
+      }
+
+      const name =
+        document.getElementById("name")
+        .value.trim();
+
+      const father =
+        document.getElementById("father")
+        .value.trim();
+
+      const address =
+        document.getElementById("address")
+        .value.trim();
+
+      const ageValue =
+        document.getElementById("age")
+        .value;
+
+      const death_date =
+        document.getElementById("death_date")
+        .value || null;
+
+      const death_reason =
+        document.getElementById("death_reason")
+        .value.trim();
+
+      const age =
+        ageValue === ""
+          ? null
+          : Number(ageValue);
+
+      const photoFile =
+        document.getElementById("photoFile")
+        .files[0];
+
+      let photo_url = null;
+
+
+      /*
+       PHOTO UPLOAD
+
+       যদি storage bucket "photos" থাকে,
+       তাহলে ছবি আপলোড করবে।
+
+       bucket না থাকলে profile save বন্ধ করবে না।
+      */
+
+      if(photoFile){
+
+        try{
+
+          const ext =
+            photoFile.name
+            .split(".")
+            .pop();
+
+          const fileName =
+            Date.now() +
+            "_" +
+            Math.random()
+            .toString(36)
+            .substring(2) +
+            "." +
+            ext;
+
+          const {
+            error:uploadError
+          } =
+            await sb.storage
+            .from("photos")
+            .upload(
+              fileName,
+              photoFile,
+              {
+                upsert:false
+              }
+            );
+
+          if(!uploadError){
+
+            const {
+              data:urlData
+            } =
+              sb.storage
+              .from("photos")
+              .getPublicUrl(fileName);
+
+            photo_url =
+              urlData.publicUrl;
+
+          }else{
+
+            console.warn(
+              "Photo upload হয়নি:",
+              uploadError.message
+            );
+
+          }
+
+        }catch(photoError){
+
+          console.warn(
+            "Photo upload error:",
+            photoError
+          );
+
+        }
+
+      }
+
+
+      const insertData = {
+
+        name:name,
+
+        father_husband:
+          father || null,
+
+        address:
+          address || null,
+
+        age:age,
+
+        death_date:
+          death_date,
+
+        death_reason:
+          death_reason || null,
+
+        photo_url:
+          photo_url
+
+      };
+
+
+      const {
+        data,
+        error
+      } =
+        await sb
+        .from("profiles")
+        .insert(insertData)
+        .select()
+        .single();
+
+
+      if(error)
+        throw error;
+
+
+      message(
+        adminMsg,
+        "✅ Profile সফলভাবে যোগ হয়েছে।",
+        "success"
+      );
+
+      profileForm.reset();
+
+      await loadProfiles();
+
+    }catch(error){
+
+      console.error(error);
+
+      message(
+        adminMsg,
+        "❌ Profile যোগ হয়নি: " +
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   LOAD PROFILES
+===================================================== */
+
+async function loadProfiles(){
+
+  adminProfiles.innerHTML =
+    "<p>Profile লোড হচ্ছে...</p>";
+
+  try{
+
+    const sb = getSupabaseClient();
+
+    const {
+      data,
+      error
+    } =
+      await sb
+      .from("profiles")
+      .select("*")
+      .order("id",{ascending:false});
+
+    if(error)
+      throw error;
+
+    window.allProfiles =
+      data || [];
+
+    renderProfiles(
+      window.allProfiles
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    adminProfiles.innerHTML = `
+      <div class="empty">
+        ❌ Profile লোড করা যায়নি।
+        <br><br>
+        ${escapeHtml(error.message)}
+      </div>
+    `;
+
+  }
+
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function renderProfiles(list){
+
+  if(!list.length){
+
+    adminProfiles.innerHTML =
+      '<div class="empty">কোনো Profile পাওয়া যায়নি।</div>';
+
+    return;
+
+  }
+
+
+  adminProfiles.innerHTML =
+    list.map(function(p){
+
+      const father =
+        p.father_husband ||
+        p.father ||
+        "—";
+
+      const address =
+        p.address ||
+        p.village ||
+        "—";
+
+      const age =
+        p.age == null
+          ? "—"
+          : p.age + " বছর";
+
+      const date =
+        p.death_date ||
+        "—";
+
+      const cause =
+        p.death_reason ||
+        p.death_cause ||
+        "";
+
+
+      return `
+
+        <div class="profile">
+
+          ${
+            p.photo_url
+            ?
+            `<img
+              class="photo"
+              src="${escapeAttr(p.photo_url)}"
+              alt="${escapeAttr(p.name || "")}"
+              onerror="this.style.display='none'"
+            >`
+            :
+            ""
+          }
+
+          <div class="profile-name">
+            ${escapeHtml(p.name || "নাম নেই")}
+          </div>
+
+          <div class="profile-info">
+
+            পিতা/স্বামী:
+            ${escapeHtml(father)}
+            <br>
+
+            ঠিকানা:
+            ${escapeHtml(address)}
+            <br>
+
+            বয়স:
+            ${escapeHtml(age)}
+            <br>
+
+            মৃত্যুর তারিখ:
+            ${escapeHtml(date)}
+
+            ${
+              cause
+              ?
+              `<br>মৃত্যুর কারণ:
+               ${escapeHtml(cause)}`
+              :
+              ""
+            }
+
+          </div>
+
+
+          <div class="actions">
+
+            <button
+              class="primary"
+              onclick="editProfile('${escapeAttr(String(p.id))}')"
+            >
+              ✏️ Edit
+            </button>
+
+            <button
+              class="danger"
+              onclick="deleteProfile('${escapeAttr(String(p.id))}')"
+            >
+              🗑️ Delete
+            </button>
+
+          </div>
+
+
+          <div
+            id="edit-${escapeAttr(String(p.id))}"
+            class="edit-box hidden"
+          >
+
+            <label>নাম</label>
+
+            <input
+              id="edit-name-${escapeAttr(String(p.id))}"
+              value="${escapeAttr(p.name || "")}"
+            >
+
+            <label>পিতা / স্বামী</label>
+
+            <input
+              id="edit-father-${escapeAttr(String(p.id))}"
+              value="${escapeAttr(father === "—" ? "" : father)}"
+            >
+
+            <label>ঠিকানা</label>
+
+            <input
+              id="edit-address-${escapeAttr(String(p.id))}"
+              value="${escapeAttr(address === "—" ? "" : address)}"
+            >
+
+            <label>বয়স</label>
+
+            <input
+              id="edit-age-${escapeAttr(String(p.id))}"
+              type="number"
+              value="${p.age == null ? "" : escapeAttr(String(p.age))}"
+            >
+
+            <label>মৃত্যুর তারিখ</label>
+
+            <input
+              id="edit-date-${escapeAttr(String(p.id))}"
+              type="date"
+              value="${escapeAttr(p.death_date || "")}"
+            >
+
+            <label>মৃত্যুর কারণ</label>
+
+            <textarea
+              id="edit-cause-${escapeAttr(String(p.id))}"
+            >${escapeHtml(cause)}</textarea>
+
+
+            <div class="actions">
+
+              <button
+                class="primary"
+                onclick="saveEdit('${escapeAttr(String(p.id))}')"
+              >
+                💾 Save Changes
+              </button>
+
+              <button
+                class="secondary"
+                onclick="cancelEdit('${escapeAttr(String(p.id))}')"
+              >
+                Cancel
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+
+/* =====================================================
+   EDIT PROFILE
+===================================================== */
+
+window.editProfile =
+function(id){
+
+  const box =
+    document.getElementById(
+      "edit-" + id
+    );
+
+  if(!box)
+    return;
+
+  box.classList.toggle("hidden");
+
+};
+
+
+/* =====================================================
+   CANCEL EDIT
+===================================================== */
+
+window.cancelEdit =
+function(id){
+
+  const box =
+    document.getElementById(
+      "edit-" + id
+    );
+
+  if(box)
+    box.classList.add("hidden");
+
+};
+
+
+/* =====================================================
+   SAVE EDIT
+===================================================== */
+
+window.saveEdit =
+async function(id){
+
+  try{
+
+    const sb = getSupabaseClient();
+
+
+    const name =
+      document.getElementById(
+        "edit-name-" + id
+      ).value.trim();
+
+    if(!name){
+
+      alert("নাম দিতে হবে।");
+
+      return;
+
+    }
+
+
+    const father =
+      document.getElementById(
+        "edit-father-" + id
+      ).value.trim();
+
+
+    const address =
+      document.getElementById(
+        "edit-address-" + id
+      ).value.trim();
+
+
+    const ageValue =
+      document.getElementById(
+        "edit-age-" + id
+      ).value;
+
+
+    const date =
+      document.getElementById(
+        "edit-date-" + id
+      ).value || null;
+
+
+    const cause =
+      document.getElementById(
+        "edit-cause-" + id
+      ).value.trim();
+
+
+    const age =
+      ageValue === ""
+        ? null
+        : Number(ageValue);
+
+
+    const updateData = {
+
+      name:name,
+
+      father_husband:
+        father || null,
+
+      address:
+        address || null,
+
+      age:age,
+
+      death_date:
+        date,
+
+      death_reason:
+        cause || null
+
+    };
+
+
+    const {
+      data,
+      error
+    } =
+      await sb
+      .from("profiles")
+      .update(updateData)
+      .eq("id",id)
+      .select();
+
+
+    if(error)
+      throw error;
+
+
+    if(!data || !data.length){
+
+      throw new Error(
+        "Update হয়েছে বলে Supabase কোনো row ফেরত দেয়নি। RLS policy পরীক্ষা করুন।"
+      );
+
+    }
+
+
+    alert(
+      "✅ Profile সফলভাবে Update হয়েছে।"
+    );
+
+
+    await loadProfiles();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "❌ Edit/Update সমস্যা:\n\n" +
+      error.me
