@@ -1,258 +1,870 @@
-<!doctype html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0757d9">
-  <title>স্মৃতি সংরক্ষণ — Admin</title>
-  <link rel="stylesheet" href="style.css">
-</head>
+// admin.js
+// স্মৃতি সংরক্ষণ — Admin Profile Management
 
-<body>
+const SUPABASE_OK =
+  window.supabase &&
+  window.SUPABASE_URL &&
+  window.SUPABASE_ANON_KEY &&
+  window.SUPABASE_URL.includes("supabase.co") &&
+  !window.SUPABASE_URL.includes("PASTE_");
 
-<header class="topbar">
-  <button class="icon-btn" onclick="window.location.href='./index.html'">←</button>
+const sb = SUPABASE_OK
+  ? window.supabase.createClient(
+      window.SUPABASE_URL,
+      window.SUPABASE_ANON_KEY
+    )
+  : null;
 
-  <div>
-    <h1>Admin Dashboard</h1>
-    <small>স্মৃতি সংরক্ষণ</small>
-  </div>
+const $ = id => document.getElementById(id);
 
-  <span></span>
-</header>
+const loginSection = $("loginSection");
+const adminPanel = $("adminPanel");
+const loginForm = $("loginForm");
+const loginMsg = $("loginMsg");
+const profileForm = $("profileForm");
+const adminMsg = $("adminMsg");
+const photoFile = $("photoFile");
+const adminProfiles = $("adminProfiles");
+const adminSearch = $("adminSearch");
+const adminSearchBtn = $("adminSearchBtn");
 
-<main class="container admin-dashboard">
+let allProfiles = [];
 
-  <section class="dashboard-head">
-    <div>
-      <span class="eyebrow">ADMIN PANEL</span>
-      <h2>Profile Management</h2>
-      <p>Profile যোগ, খোঁজা, Edit এবং Delete করুন।</p>
-    </div>
+/* =========================
+   নিরাপদ Text
+========================= */
 
-    <button id="logoutBtn" class="logout-btn">↪ Logout</button>
-  </section>
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[c]));
+}
 
+/* =========================
+   Date Format
+========================= */
 
-  <!-- LOGIN -->
+function formatDate(value) {
+  if (!value) return "—";
 
-  <section id="loginSection" class="search-card login-card">
+  const d = new Date(
+    String(value).length === 10
+      ? value + "T00:00:00"
+      : value
+  );
 
-    <div class="dash-icon">🔐</div>
+  if (isNaN(d.getTime())) return esc(value);
 
-    <h2>Admin Login</h2>
+  return new Intl.DateTimeFormat("bn-BD", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(d);
+}
 
-    <p>শুধু অনুমোদিত Admin প্রবেশ করতে পারবেন</p>
+/* =========================
+   Auth
+========================= */
 
-    <form id="loginForm">
+async function refreshAuth() {
+  if (!sb) {
+    loginSection?.classList.add("hidden");
+    adminPanel?.classList.remove("hidden");
+    await loadProfiles();
+    return;
+  }
 
-      <input
-        id="email"
-        type="email"
-        required
-        autocomplete="username"
-        placeholder="Admin Email">
+  const { data, error } = await sb.auth.getSession();
 
-      <input
-        id="password"
-        type="password"
-        required
-        autocomplete="current-password"
-        placeholder="Password">
+  if (error) {
+    console.error(error);
+    loginSection?.classList.remove("hidden");
+    adminPanel?.classList.add("hidden");
+    return;
+  }
 
-      <button type="submit" class="primary full-btn">
-        🔐 Login
-      </button>
+  if (data?.session) {
+    loginSection?.classList.add("hidden");
+    adminPanel?.classList.remove("hidden");
+    await loadProfiles();
+  } else {
+    loginSection?.classList.remove("hidden");
+    adminPanel?.classList.add("hidden");
+  }
+}
 
-    </form>
+/* =========================
+   Login
+========================= */
 
-    <p id="loginMsg"></p>
+loginForm?.addEventListener("submit", async e => {
+  e.preventDefault();
 
-  </section>
+  if (!sb) {
+    loginMsg.textContent = "❌ Supabase config পাওয়া যায়নি।";
+    return;
+  }
 
+  loginMsg.textContent = "Login হচ্ছে...";
 
-  <!-- ADMIN PANEL -->
+  const email = $("email")?.value.trim();
+  const password = $("password")?.value;
 
-  <section id="adminPanel" class="hidden">
+  const { error } = await sb.auth.signInWithPassword({
+    email,
+    password
+  });
 
-    <!-- STATS -->
+  if (error) {
+    loginMsg.textContent = "❌ " + error.message;
+    return;
+  }
 
-    <div class="dash-stats">
+  loginMsg.textContent = "✅ Login সফল হয়েছে।";
+  await refreshAuth();
+});
 
-      <div class="dash-stat">
-        <span>👥</span>
-        <small>Total Profiles</small>
-        <strong id="dashTotal">0</strong>
-      </div>
+/* =========================
+   Logout
+========================= */
 
-      <div class="dash-stat">
-        <span>📅</span>
-        <small>এই মাসে যুক্ত</small>
-        <strong id="dashMonthly">0</strong>
-      </div>
+$("logoutBtn")?.addEventListener("click", async () => {
+  if (sb) {
+    await sb.auth.signOut();
+  }
 
-      <div class="dash-stat">
-        <span>🔎</span>
-        <small>Management</small>
-        <strong>Active</strong>
-      </div>
+  location.reload();
+});
 
-    </div>
+/* =========================
+   Photo Upload
+========================= */
 
+async function uploadPhoto(file, profileId) {
+  if (!file || !sb) return null;
 
-    <!-- ADD PROFILE -->
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error("ছবির সাইজ ৫ MB-এর মধ্যে রাখুন।");
+  }
 
-    <section class="dashboard-card">
+  const ext =
+    (file.name.split(".").pop() || "jpg")
+      .toLowerCase();
 
-      <div class="section-title">
+  const path =
+    "profiles/" +
+    String(profileId) +
+    "-" +
+    Date.now() +
+    "." +
+    ext;
 
-        <div>
-          <h3>➕ নতুন Profile</h3>
-          <p>নতুন ব্যক্তির তথ্য ও ছবি যোগ করুন</p>
+  const { error } = await sb.storage
+    .from("profile-photos")
+    .upload(path, file, {
+      upsert: true,
+      contentType: file.type || "image/jpeg"
+    });
+
+  if (error) throw error;
+
+  return sb.storage
+    .from("profile-photos")
+    .getPublicUrl(path)
+    .data
+    .publicUrl;
+}
+
+/* =========================
+   Add Profile
+========================= */
+
+profileForm?.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  adminMsg.textContent = "সংরক্ষণ করা হচ্ছে...";
+
+  try {
+    const fd = new FormData(profileForm);
+
+    const name = String(fd.get("name") || "").trim();
+    const father = String(fd.get("father") || "").trim();
+    const village = String(fd.get("village") || "").trim();
+    const ageValue = String(fd.get("age") || "").trim();
+    const deathReason =
+      String(fd.get("death_reason") || "").trim();
+    const date = String(fd.get("date") || "").trim();
+
+    if (!name) {
+      throw new Error("নাম দিতে হবে।");
+    }
+
+    const id =
+      crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now());
+
+    const row = {
+      id: id,
+      name: name,
+      father: father,
+      village: village,
+      age: ageValue ? Number(ageValue) : null,
+      death_reason: deathReason,
+      date: date || null,
+      created_at: new Date().toISOString()
+    };
+
+    if (sb) {
+      const { error } = await sb
+        .from("profiles")
+        .insert(row);
+
+      if (error) throw error;
+
+      const file = photoFile?.files?.[0];
+
+      if (file) {
+        const photoUrl = await uploadPhoto(file, id);
+
+        if (photoUrl) {
+          const photoResult = await sb
+            .from("profiles")
+            .update({
+              photo_url: photoUrl
+            })
+            .eq("id", id);
+
+          if (photoResult.error) {
+            throw photoResult.error;
+          }
+        }
+      }
+    } else {
+      const old =
+        JSON.parse(
+          localStorage.getItem("demoProfiles") || "[]"
+        );
+
+      row.photo_url = null;
+      old.push(row);
+
+      localStorage.setItem(
+        "demoProfiles",
+        JSON.stringify(old)
+      );
+    }
+
+    profileForm.reset();
+
+    adminMsg.textContent =
+      "✅ Profile সফলভাবে যোগ হয়েছে।";
+
+    await loadProfiles();
+
+  } catch (err) {
+    console.error(err);
+
+    adminMsg.textContent =
+      "❌ " + (err.message || err);
+  }
+});
+
+/* =========================
+   Load Profiles
+========================= */
+
+async function loadProfiles(searchText = "") {
+
+  if (!sb) {
+    allProfiles =
+      JSON.parse(
+        localStorage.getItem("demoProfiles") || "[]"
+      );
+
+    renderProfiles(allProfiles);
+    updateStats(allProfiles);
+    return;
+  }
+
+  let query = sb
+    .from("profiles")
+    .select("*");
+
+  /*
+    created_at না থাকলেও যাতে পুরো Admin বন্ধ না হয়ে যায়
+  */
+
+  let result = await query.order(
+    "created_at",
+    { ascending: false }
+  );
+
+  if (result.error) {
+    result = await sb
+      .from("profiles")
+      .select("*");
+  }
+
+  if (result.error) {
+    adminProfiles.innerHTML =
+      `<p style="color:red">❌ ${esc(result.error.message)}</p>`;
+    return;
+  }
+
+  allProfiles = result.data || [];
+
+  const q =
+    String(searchText || "")
+      .trim()
+      .toLocaleLowerCase("bn-BD");
+
+  let filtered = allProfiles;
+
+  if (q) {
+    filtered = allProfiles.filter(p =>
+      String(p.name || "")
+        .toLocaleLowerCase("bn-BD")
+        .includes(q)
+    );
+  }
+
+  renderProfiles(filtered);
+  updateStats(allProfiles);
+}
+
+/* =========================
+   Render Profiles
+========================= */
+
+function renderProfiles(rows) {
+
+  if (!adminProfiles) return;
+
+  if (!rows.length) {
+    adminProfiles.innerHTML =
+      `<div class="empty">
+        কোনো Profile পাওয়া যায়নি।
+      </div>`;
+
+    return;
+  }
+
+  adminProfiles.innerHTML =
+    rows.map(p => {
+
+      const father =
+        p.father_husband ??
+        p.father ??
+        p.spouse ??
+        "";
+
+      const village =
+        p.address ??
+        p.village ??
+        "";
+
+      const deathDate =
+        p.death_date ??
+        p.date ??
+        "";
+
+      const reason =
+        p.death_reason ??
+        p.death_cause ??
+        "";
+
+      const photo =
+        p.photo_url || "";
+
+      return `
+        <div class="profile-item"
+             style="
+               padding:15px;
+               margin-bottom:12px;
+               border:1px solid #ddd;
+               border-radius:15px;
+               background:#fff;
+             ">
+
+          <div style="
+            display:flex;
+            gap:15px;
+            align-items:flex-start;
+          ">
+
+            ${
+              photo
+              ? `
+                <img
+                  src="${esc(photo)}"
+                  alt="Profile"
+                  style="
+                    width:75px;
+                    height:90px;
+                    object-fit:cover;
+                    border-radius:10px;
+                  "
+                >
+              `
+              : `
+                <div style="
+                  width:75px;
+                  height:90px;
+                  border-radius:10px;
+                  background:#eef3f8;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  font-size:30px;
+                ">
+                  👤
+                </div>
+              `
+            }
+
+            <div style="flex:1">
+
+              <h3 style="margin:0 0 8px">
+                ${esc(p.name || "নাম নেই")}
+              </h3>
+
+              <div>
+                পিতা/স্বামী:
+                ${esc(father || "—")}
+              </div>
+
+              <div>
+                গ্রাম:
+                ${esc(village || "—")}
+              </div>
+
+              <div>
+                বয়স:
+                ${
+                  p.age == null
+                  ? "—"
+                  : esc(p.age) + " বছর"
+                }
+              </div>
+
+              <div>
+                মৃত্যুর তারিখ:
+                ${formatDate(deathDate)}
+              </div>
+
+              <div>
+                মৃত্যুর কারণ:
+                ${esc(reason || "—")}
+              </div>
+
+            </div>
+          </div>
+
+          <div style="
+            display:flex;
+            gap:10px;
+            margin-top:14px;
+          ">
+
+            <button
+              type="button"
+              class="primary"
+              data-edit-id="${esc(p.id)}"
+              style="flex:1"
+            >
+              ✏️ Edit
+            </button>
+
+            <button
+              type="button"
+              class="delete-profile-btn"
+              data-delete-id="${esc(p.id)}"
+              style="
+                flex:1;
+                background:#d7263d;
+                color:white;
+                border:0;
+                border-radius:10px;
+                padding:10px;
+              "
+            >
+              🗑️ Delete
+            </button>
+
+          </div>
+
         </div>
+      `;
 
-      </div>
+    }).join("");
 
+  /* Edit buttons */
 
-      <form id="profileForm">
+  adminProfiles
+    .querySelectorAll("[data-edit-id]")
+    .forEach(button => {
 
-        <div class="form-grid">
+      button.addEventListener("click", () => {
+        editProfile(button.dataset.editId);
+      });
 
-          <input
-            name="name"
-            required
-            placeholder="নাম *">
+    });
 
-          <input
-            name="father"
-            placeholder="পিতা/স্বামীর নাম">
+  /* Delete buttons */
 
-          <input
-            name="mother"
-            placeholder="মাতার নাম">
+  adminProfiles
+    .querySelectorAll("[data-delete-id]")
+    .forEach(button => {
 
-          <input
-            name="spouse"
-            placeholder="স্বামী/স্ত্রীর নাম">
+      button.addEventListener("click", () => {
+        deleteProfile(button.dataset.deleteId);
+      });
 
-          <input
-            name="village"
-            placeholder="গ্রাম">
+    });
+}
 
-          <input
-            name="post"
-            placeholder="ডাকঘর">
+/* =========================
+   EDIT PROFILE
+========================= */
 
-          <input
-            name="police"
-            placeholder="থানা">
+async function editProfile(id) {
 
-          <input
-            name="district"
-            placeholder="জেলা">
+  const profile =
+    allProfiles.find(
+      p => String(p.id) === String(id)
+    );
 
-          <input
-            name="age"
-            type="number"
-            min="0"
-            placeholder="বয়স">
+  if (!profile) {
+    alert("Profile পাওয়া যায়নি।");
+    return;
+  }
 
-          <input
-            name="mobile"
-            type="tel"
-            placeholder="মোবাইল">
+  const oldName = profile.name || "";
 
-          <input
-            name="address"
-            placeholder="ঠিকানা">
+  const name =
+    prompt("নাম:", oldName);
 
-          <input
-            name="death_reason"
-            placeholder="মৃত্যুর কারণ">
+  if (name === null) return;
 
-          <input
-            name="date"
-            type="date">
+  const father =
+    prompt(
+      "পিতা/স্বামীর নাম:",
+      profile.father_husband ??
+      profile.father ??
+      profile.spouse ??
+      ""
+    );
 
-        </div>
+  if (father === null) return;
 
+  const village =
+    prompt(
+      "গ্রাম:",
+      profile.address ??
+      profile.village ??
+      ""
+    );
 
-        <label class="upload-label">
-          🖼️ Profile Photo
+  if (village === null) return;
 
-          <input
-            id="photoFile"
-            type="file"
-            accept="image/*">
+  const age =
+    prompt(
+      "বয়স:",
+      profile.age ?? ""
+    );
 
-        </label>
+  if (age === null) return;
 
+  const reason =
+    prompt(
+      "মৃত্যুর কারণ:",
+      profile.death_reason ??
+      profile.death_cause ??
+      ""
+    );
 
-        <button
-          type="submit"
-          class="primary full-btn">
+  if (reason === null) return;
 
-          ➕ Profile যোগ করুন
+  const date =
+    prompt(
+      "তারিখ (YYYY-MM-DD):",
+      profile.death_date ??
+      profile.date ??
+      ""
+    );
 
-        </button>
+  if (date === null) return;
 
-        <p id="adminMsg"></p>
+  try {
 
-      </form>
+    const updates = {};
 
-    </section>
+    /*
+      যেই column database-এ আছে,
+      শুধু সেই column-ই update করবে।
+    */
 
+    updates.name = name.trim();
 
-    <!-- SEARCH -->
+    if ("father_husband" in profile) {
+      updates.father_husband =
+        father.trim();
+    } else if ("father" in profile) {
+      updates.father =
+        father.trim();
+    } else if ("spouse" in profile) {
+      updates.spouse =
+        father.trim();
+    }
 
-    <section class="dashboard-card">
+    if ("address" in profile) {
+      updates.address =
+        village.trim();
+    } else if ("village" in profile) {
+      updates.village =
+        village.trim();
+    }
 
-      <div class="section-title">
+    if ("age" in profile) {
+      updates.age =
+        age.trim()
+          ? Number(age)
+          : null;
+    }
 
-        <div>
-          <h3>👤 Profiles</h3>
-          <p>Profile খুঁজে Edit অথবা Delete করুন</p>
-        </div>
+    if ("death_reason" in profile) {
+      updates.death_reason =
+        reason.trim();
+    } else if ("death_cause" in profile) {
+      updates.death_cause =
+        reason.trim();
+    }
 
-      </div>
+    if ("death_date" in profile) {
+      updates.death_date =
+        date.trim() || null;
+    } else if ("date" in profile) {
+      updates.date =
+        date.trim() || null;
+    }
 
+    if (sb) {
 
-      <div class="admin-search">
+      const { data, error } =
+        await sb
+          .from("profiles")
+          .update(updates)
+          .eq("id", id)
+          .select();
 
-        <input
-          id="adminSearch"
-          type="search"
-          placeholder="নাম দিয়ে Profile খুঁজুন..."
-          autocomplete="off">
+      if (error) {
+        console.error(error);
+        throw error;
+      }
 
-        <button
-          id="adminSearchBtn"
-          class="primary"
-          type="button">
+      if (!data || !data.length) {
+        throw new Error(
+          "Profile update করার অনুমতি নেই অথবা Profile পাওয়া যায়নি।"
+        );
+      }
 
-          🔍 Search
+    } else {
 
-        </button>
+      let rows =
+        JSON.parse(
+          localStorage.getItem("demoProfiles") || "[]"
+        );
 
-      </div>
+      rows = rows.map(p =>
+        String(p.id) === String(id)
+          ? { ...p, ...updates }
+          : p
+      );
 
+      localStorage.setItem(
+        "demoProfiles",
+        JSON.stringify(rows)
+      );
+    }
 
-      <div
-        id="adminProfiles"
-        class="profile-list">
+    alert("✅ Profile সফলভাবে Edit হয়েছে।");
 
-      </div>
+    await loadProfiles(
+      adminSearch?.value.trim() || ""
+    );
 
-    </section>
+  } catch (err) {
 
-  </section>
+    console.error(err);
 
-</main>
+    alert(
+      "❌ Edit করা যায়নি:\n\n" +
+      (err.message || err)
+    );
+  }
+}
 
+/* =========================
+   DELETE PROFILE
+========================= */
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config.js"></script>
-<script src="./admin.js"></script>
+async function deleteProfile(id) {
 
-</body>
-</html>
+  const profile =
+    allProfiles.find(
+      p => String(p.id) === String(id)
+    );
+
+  if (!profile) {
+    alert("Profile পাওয়া যায়নি।");
+    return;
+  }
+
+  const ok =
+    confirm(
+      `"${profile.name || "এই Profile"}" স্থায়ীভাবে Delete করবেন?`
+    );
+
+  if (!ok) return;
+
+  try {
+
+    if (sb) {
+
+      const { data, error } =
+        await sb
+          .from("profiles")
+          .delete()
+          .eq("id", id)
+          .select();
+
+      if (error) {
+        console.error(error);
+        throw error;
+      }
+
+      if (!data || !data.length) {
+        throw new Error(
+          "Delete করার অনুমতি নেই অথবা Profile পাওয়া যায়নি।"
+        );
+      }
+
+    } else {
+
+      let rows =
+        JSON.parse(
+          localStorage.getItem("demoProfiles") || "[]"
+        );
+
+      rows =
+        rows.filter(
+          p => String(p.id) !== String(id)
+        );
+
+      localStorage.setItem(
+        "demoProfiles",
+        JSON.stringify(rows)
+      );
+    }
+
+    alert("✅ Profile সফলভাবে Delete হয়েছে।");
+
+    await loadProfiles(
+      adminSearch?.value.trim() || ""
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      "❌ Delete করা যায়নি:\n\n" +
+      (err.message || err)
+    );
+  }
+}
+
+/* =========================
+   Search
+========================= */
+
+adminSearchBtn?.addEventListener(
+  "click",
+  () => {
+    loadProfiles(
+      adminSearch.value.trim()
+    );
+  }
+);
+
+adminSearch?.addEventListener(
+  "keydown",
+  e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      loadProfiles(
+        adminSearch.value.trim()
+      );
+    }
+  }
+);
+
+/* =========================
+   Dashboard Stats
+========================= */
+
+function updateStats(rows) {
+
+  const total =
+    $("dashTotal");
+
+  const monthly =
+    $("dashMonthly");
+
+  if (total) {
+    total.textContent =
+      rows.length.toLocaleString("bn-BD");
+  }
+
+  if (monthly) {
+
+    const now = new Date();
+
+    const count =
+      rows.filter(p => {
+
+        if (!p.created_at) return false;
+
+        const d =
+          new Date(p.created_at);
+
+        return (
+          d.getFullYear() ===
+            now.getFullYear() &&
+          d.getMonth() ===
+            now.getMonth()
+        );
+
+      }).length;
+
+    monthly.textContent =
+      count.toLocaleString("bn-BD");
+  }
+}
+
+/* =========================
+   Start
+========================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    refreshAuth();
+  }
+);
