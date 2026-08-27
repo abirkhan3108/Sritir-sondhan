@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="bn">
 <head>
+<link rel="icon" type="image/png" href="logo.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
@@ -15,6 +16,7 @@ button{border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:
 </style>
 </head>
 <body>
+<div style="text-align:center;padding:10px"><img src="logo.png" alt="স্মৃতি সংরক্ষণ" style="width:72px;height:72px;object-fit:contain"></div>
 <header><h1>🕊️ স্মৃতি সংরক্ষণ — Admin Dashboard</h1><p>ব্যক্তির তথ্য যোগ, সম্পাদনা, ছবি আপলোড ও মুছে ফেলার জন্য</p></header>
 <div class="wrap">
 <div id="loginCard" class="card hidden">
@@ -46,33 +48,15 @@ button{border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:
 <h2 id="formTitle">➕ নতুন ব্যক্তি যোগ করুন</h2>
 <form id="personForm">
 <input type="hidden" id="personId">
-
-<label>নাম *</label>
-<input id="name" required placeholder="পূর্ণ নাম">
-
-<label>পিতা / স্বামীর নাম</label>
-<input id="fatherHusband" placeholder="পিতা বা স্বামীর নাম">
-
-<label>ঠিকানা</label>
-<input id="address" placeholder="গ্রাম, ওয়ার্ড, ব্লক, জেলা">
-
-<label>বয়স</label>
-<input id="age" type="number" min="0" max="150" inputmode="numeric" placeholder="বয়স">
-
-<label>মৃত্যুর তারিখ</label>
-<input id="deathDate" type="date">
-
-<label>মৃত্যুর কারণ</label>
-<textarea id="deathReason" placeholder="মৃত্যুর কারণ লিখুন"></textarea>
-
-<label>পাসপোর্ট সাইজের ছবি</label>
-<input id="photo" type="file" accept="image/jpeg,image/png,image/webp">
-<img id="preview" class="preview">
-
-<div class="row">
-  <button class="primary" type="submit">💾 সংরক্ষণ করুন</button>
-  <button class="secondary" type="button" id="cancel">বাতিল</button>
-</div>
+<label>নাম *</label><input id="name" required placeholder="পূর্ণ নাম">
+<label>ছবি</label><input id="photo" type="file" accept="image/*"><img id="preview" class="preview">
+<label>জন্মতারিখ</label><input id="birthDate" type="date">
+<label>মৃত্যুর তারিখ</label><input id="deathDate" type="date">
+<label>ঠিকানা / গ্রাম</label><input id="address" placeholder="গ্রাম, উপজেলা, জেলা">
+<label>পরিবারের তথ্য</label><textarea id="family" placeholder="পরিবার/স্বজনের তথ্য"></textarea>
+<label>জীবনী</label><textarea id="bio" placeholder="সংক্ষিপ্ত জীবনী"></textarea>
+<label>স্মৃতি / কথা</label><textarea id="memory" placeholder="স্মৃতি, কথা বা বিশেষ তথ্য"></textarea>
+<div class="row"><button class="primary" type="submit">💾 সংরক্ষণ করুন</button><button class="secondary" type="button" id="cancel">বাতিল</button></div>
 </form>
 </section>
 
@@ -89,281 +73,117 @@ button{border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:
 <script>
 let sb=null, editing=null, people=[];
 const $=id=>document.getElementById(id);
+function show(msg,error=false){$('status').textContent=msg;$('status').className='status '+(error?'error':'');$('status').classList.remove('hidden');setTimeout(()=>$('status').classList.add('hidden'),4000)}
+function escapeHtml(s=''){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
-function show(msg,error=false){
-  $('status').textContent=msg;
-  $('status').className='status '+(error?'error':'');
-  $('status').classList.remove('hidden');
-  setTimeout(()=>$('status').classList.add('hidden'),4000);
-}
-function escapeHtml(s=''){
-  return String(s).replace(/[&<>"']/g,c=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-  }[c]));
-}
 function showLoginError(message){
-  const box=$('loginError');
-  box.textContent=message;
-  box.classList.remove('hidden');
+ const box=$('loginError');
+ box.textContent=message;
+ box.classList.remove('hidden');
 }
-function clearLoginError(){
-  $('loginError').classList.add('hidden');
-  $('loginError').textContent='';
-}
-function causeOf(p){
-  return p.death_reason || p.death_cause || '';
-}
-
+function clearLoginError(){$('loginError').classList.add('hidden');$('loginError').textContent=''}
 async function init(){
-  try{
-    if(!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY){
-      $('configMsg').classList.remove('hidden');
-      showLoginError('config.js-এ Supabase URL বা Publishable Key পাওয়া যায়নি।');
-      return;
-    }
-    sb=supabase.createClient(
-      window.SUPABASE_URL,
-      window.SUPABASE_ANON_KEY
-    );
-    const {data:{session},error}=await sb.auth.getSession();
-    if(error)throw error;
-    await updateAuthUI(session);
-    sb.auth.onAuthStateChange((_event,session)=>{
-      setTimeout(()=>updateAuthUI(session),0);
-    });
-  }catch(err){
-    showLoginError('Supabase সংযোগে সমস্যা হয়েছে.
-
-'+(err.message||err));
-    $('loginCard').classList.remove('hidden');
+ try{
+  if(!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY){
+   $('configMsg').classList.remove('hidden');
+   showLoginError('config.js-এ Supabase URL বা Publishable Key পাওয়া যায়নি।');
+   return;
   }
+  sb=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
+  const {data:{session},error}=await sb.auth.getSession();
+  if(error) throw error;
+  await updateAuthUI(session);
+  sb.auth.onAuthStateChange((_event, session)=>{
+   setTimeout(()=>updateAuthUI(session),0);
+  });
+ }catch(err){
+  showLoginError('Supabase সংযোগে সমস্যা হয়েছে।\n\n'+(err.message||err));
+  $('loginCard').classList.remove('hidden');
+ }
 }
-
 async function updateAuthUI(session){
-  if(!session){
-    $('configMsg').classList.add('hidden');
-    $('app').classList.add('hidden');
-    $('userBar').classList.add('hidden');
-    $('loginCard').classList.remove('hidden');
-    return;
-  }
-  clearLoginError();
-  $('loginCard').classList.add('hidden');
-  $('userBar').classList.remove('hidden');
-  $('userEmail').textContent=session.user.email||'';
-  $('configMsg').classList.add('hidden');
-  $('app').classList.remove('hidden');
-  await loadPeople();
+ if(!session){
+  $('configMsg').classList.add('hidden');$('app').classList.add('hidden');$('userBar').classList.add('hidden');$('loginCard').classList.remove('hidden');return;
+ }
+ clearLoginError();
+ $('loginCard').classList.add('hidden');$('userBar').classList.remove('hidden');$('userEmail').textContent=session.user.email||'';$('configMsg').classList.add('hidden');$('app').classList.remove('hidden');await loadPeople();
 }
-
 $('loginForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  clearLoginError();
-  if(!sb){
-    showLoginError('Supabase এখনো প্রস্তুত হয়নি। পেজটি একবার Refresh করুন।');
-    return;
-  }
-  const btn=$('loginBtn');
-  btn.disabled=true;
-  btn.textContent='লগইন হচ্ছে…';
-  try{
-    const email=$('loginEmail').value.trim();
-    const password=$('loginPassword').value;
-    const {data,error}=await sb.auth.signInWithPassword({email,password});
-    if(error)throw error;
-    if(!data.session)
-      throw new Error('লগইন সফল হলেও session পাওয়া যায়নি।');
-    await updateAuthUI(data.session);
-    show('লগইন সফল হয়েছে।');
-  }catch(err){
-    let msg=err?.message||'লগইন করা যায়নি।';
-    if(err?.status===400)
-      msg+='
-
-Email/password সঠিক কি না এবং Supabase Authentication-এ user Confirmed আছে কি না পরীক্ষা করুন।';
-    showLoginError(msg);
-  }finally{
-    btn.disabled=false;
-    btn.textContent='লগইন';
-  }
+ e.preventDefault();
+ clearLoginError();
+ if(!sb){showLoginError('Supabase এখনো প্রস্তুত হয়নি। পেজটি একবার Refresh করুন।');return}
+ const btn=$('loginBtn');
+ btn.disabled=true;btn.textContent='লগইন হচ্ছে…';
+ try{
+  const email=$('loginEmail').value.trim();
+  const password=$('loginPassword').value;
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error) throw error;
+  if(!data.session) throw new Error('লগইন সফল হলেও session পাওয়া যায়নি। Supabase Authentication settings পরীক্ষা করুন।');
+  await updateAuthUI(data.session);
+  show('লগইন সফল হয়েছে।');
+ }catch(err){
+  let msg=err?.message||'লগইন করা যায়নি।';
+  if(err?.status===400) msg+='\n\nEmail/password সঠিক কি না এবং Supabase Authentication-এ user Confirmed আছে কি না পরীক্ষা করুন।';
+  showLoginError(msg);
+ }finally{
+  btn.disabled=false;btn.textContent='লগইন';
+ }
 });
-
-$('logout').addEventListener('click',async()=>{
-  const {error}=await sb.auth.signOut();
-  if(error)show(error.message,true);
-});
+$('logout').addEventListener('click',async()=>{const {error}=await sb.auth.signOut();if(error)show(error.message,true)});
 
 async function loadPeople(){
-  const {data,error}=await sb
-    .from('persons')
-    .select('*')
-    .order('created_at',{ascending:false});
-
-  if(error){
-    $('list').innerHTML='<p class="small">টেবিল/সংযোগ ঠিক করা হয়নি। Supabase SQL setup পরীক্ষা করুন।</p>';
-    return;
-  }
-  people=data||[];
-  render();
+ const {data,error}=await sb.from('persons').select('*').order('created_at',{ascending:false});
+ if(error){$('list').innerHTML='<p class="small">টেবিল/সংযোগ ঠিক করা হয়নি। supabase_setup.sql চালান।</p>';return}
+ people=data||[];render();
 }
-
 function render(){
-  const q=$('search').value.toLocaleLowerCase('bn-BD').trim();
-  const rows=people.filter(p=>
-    (p.name||'').toLocaleLowerCase('bn-BD').includes(q)
-  );
-
-  if(!rows.length){
-    $('list').innerHTML='<p class="small">কোনো তথ্য পাওয়া যায়নি।</p>';
-    return;
-  }
-
-  $('list').innerHTML=rows.map(p=>{
-    const cause=causeOf(p);
-    return `<div class="person">
-      <img src="${escapeHtml(p.photo_url||'')}"
-           onerror="this.style.visibility='hidden'">
-      <div class="info">
-        <h3>${escapeHtml(p.name||'নাম নেই')}</h3>
-        <p>${escapeHtml(p.father_husband||p.address||'')}</p>
-        <p class="small">
-          বয়স: ${p.age!=null?escapeHtml(String(p.age))+' বছর':'—'}
-          ${p.death_date?' • মৃত্যু: '+escapeHtml(p.death_date):''}
-        </p>
-        ${cause?`<p class="small">মৃত্যুর কারণ: ${escapeHtml(cause)}</p>`:''}
-      </div>
-      <div class="row">
-        <button class="secondary" onclick="editPerson(${JSON.stringify(String(p.id))})">✏️</button>
-        <button class="danger" onclick="deletePerson(${JSON.stringify(String(p.id))})">🗑️</button>
-      </div>
-    </div>`;
-  }).join('');
+ const q=$('search').value.toLowerCase().trim();
+ const rows=people.filter(p=>(p.name||'').toLowerCase().includes(q));
+ if(!rows.length){$('list').innerHTML='<p class="small">কোনো তথ্য পাওয়া যায়নি।</p>';return}
+ $('list').innerHTML=rows.map(p=>`<div class="person">
+ <img src="${p.photo_url||''}" onerror="this.style.visibility='hidden'">
+ <div class="info"><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.address||'')}</p><p class="small">${p.death_date? 'মৃত্যু: '+p.death_date:''}</p></div>
+ <div class="row"><button class="secondary" onclick="editPerson('${p.id}')">✏️</button><button class="danger" onclick="deletePerson('${p.id}')">🗑️</button></div>
+ </div>`).join('');
 }
 $('search').addEventListener('input',render);
-
-$('photo').addEventListener('change',e=>{
-  const f=e.target.files[0];
-  if(f){
-    $('preview').src=URL.createObjectURL(f);
-    $('preview').style.display='block';
-  }
-});
+$('photo').addEventListener('change',e=>{const f=e.target.files[0];if(f){$('preview').src=URL.createObjectURL(f);$('preview').style.display='block'}});
 
 async function uploadPhoto(file,id){
-  if(!file)return null;
-  const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
-  const path=`${id}.${ext}`;
-  const up=await sb.storage
-    .from('person-photos')
-    .upload(path,file,{upsert:true,contentType:file.type});
-  if(up.error)throw up.error;
-  return sb.storage.from('person-photos').getPublicUrl(path).data.publicUrl;
+ if(!file)return null;
+ const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+ const path=`${id}.${ext}`;
+ const up=await sb.storage.from('person-person-photos').upload(path,file,{upsert:true,contentType:file.type});
+ if(up.error) throw up.error;
+ return sb.storage.from('person-person-photos').getPublicUrl(path).data.publicUrl;
 }
-
 $('personForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-
-  try{
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session)throw new Error('দয়া করে আগে Admin Login করুন।');
-
-    const file=$('photo').files[0];
-    let photo_url=editing
-      ? (people.find(p=>String(p.id)===String(editing))?.photo_url||null)
-      : null;
-
-    if(file){
-      const targetId=editing || `temp-${Date.now()}`;
-      photo_url=await uploadPhoto(file,targetId);
-    }
-
-    const obj={
-      name:$('name').value.trim(),
-      father_husband:$('fatherHusband').value.trim()||null,
-      address:$('address').value.trim()||null,
-      age:$('age').value===''?null:Number($('age').value),
-      death_date:$('deathDate').value||null,
-      death_reason:$('deathReason').value.trim()||null,
-      photo_url
-    };
-
-    let error;
-
-    if(editing){
-      ({error}=await sb.from('persons').update(obj).eq('id',editing));
-    }else{
-      const {data,error:insertError}=await sb
-        .from('persons')
-        .insert(obj)
-        .select('id')
-        .single();
-      error=insertError;
-
-      // নতুন row-এর আসল id পাওয়ার পর ছবি থাকলে সঠিক নামে আবার upload করা
-      if(!error && file && data?.id){
-        const realUrl=await uploadPhoto(file,data.id);
-        const {error:updateError}=await sb
-          .from('persons')
-          .update({photo_url:realUrl})
-          .eq('id',data.id);
-        if(updateError)error=updateError;
-      }
-    }
-
-    if(error)throw error;
-
-    show(editing?'তথ্য আপডেট হয়েছে।':'নতুন ব্যক্তি যোগ হয়েছে।');
-    resetForm();
-    await loadPeople();
-
-  }catch(err){
-    show(err.message||'সংরক্ষণ করা যায়নি',true);
-  }
+ e.preventDefault();
+ try{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) throw new Error('দয়া করে আগে Admin Login করুন।');
+  const id=editing||crypto.randomUUID(), file=$('photo').files[0];
+  let photo_url=people.find(p=>p.id===id)?.photo_url||null;
+  if(file) photo_url=await uploadPhoto(file,id);
+  const obj={id,name:$('name').value.trim(),birth_date:$('birthDate').value||null,death_date:$('deathDate').value||null,address:$('address').value.trim(),family_info:$('family').value.trim(),bio:$('bio').value.trim(),memory:$('memory').value.trim(),photo_url};
+  const {error}=await sb.from('persons').upsert(obj);
+  if(error)throw error;
+  show(editing?'তথ্য আপডেট হয়েছে।':'নতুন ব্যক্তি যোগ হয়েছে।');resetForm();await loadPeople();
+ }catch(err){show(err.message||'সংরক্ষণ করা যায়নি',true)}
 });
-
 function editPerson(id){
-  const p=people.find(x=>String(x.id)===String(id));
-  if(!p)return;
-
-  editing=id;
-  $('formTitle').textContent='✏️ তথ্য সম্পাদনা';
-  $('personId').value=id;
-  $('name').value=p.name||'';
-  $('fatherHusband').value=p.father_husband||'';
-  $('address').value=p.address||'';
-  $('age').value=p.age!=null?p.age:'';
-  $('deathDate').value=p.death_date||'';
-  $('deathReason').value=causeOf(p);
-  $('preview').src=p.photo_url||'';
-  $('preview').style.display=p.photo_url?'block':'none';
-
-  window.scrollTo({top:0,behavior:'smooth'});
+ const p=people.find(x=>x.id===id);if(!p)return;editing=id;
+ $('formTitle').textContent='✏️ তথ্য সম্পাদনা';$('personId').value=id;$('name').value=p.name||'';$('birthDate').value=p.birth_date||'';$('deathDate').value=p.death_date||'';$('address').value=p.address||'';$('family').value=p.family_info||'';$('bio').value=p.bio||'';$('memory').value=p.memory||'';window.scrollTo({top:0,behavior:'smooth'});
 }
-
 async function deletePerson(id){
-  if(!confirm('এই ব্যক্তির তথ্য মুছে ফেলবেন?'))return;
-
-  const {error}=await sb.from('persons').delete().eq('id',id);
-  if(error){
-    show(error.message,true);
-    return;
-  }
-
-  show('তথ্য মুছে ফেলা হয়েছে।');
-  await loadPeople();
+ if(!confirm('এই ব্যক্তির তথ্য মুছে ফেলবেন?'))return;
+ const {error}=await sb.from('persons').delete().eq('id',id);
+ if(error){show(error.message,true);return}show('তথ্য মুছে ফেলা হয়েছে।');await loadPeople();
 }
-
-function resetForm(){
-  editing=null;
-  $('personForm').reset();
-  $('formTitle').textContent='➕ নতুন ব্যক্তি যোগ করুন';
-  $('preview').style.display='none';
-  $('preview').src='';
-}
+function resetForm(){editing=null;$('personForm').reset();$('formTitle').textContent='➕ নতুন ব্যক্তি যোগ করুন';$('preview').style.display='none'}
 $('cancel').onclick=resetForm;
-
 init();
-
 </script>
 </body>
 </html>

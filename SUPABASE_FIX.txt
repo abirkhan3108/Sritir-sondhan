@@ -1,0 +1,3 @@
+Supabase identifiers used by this fixed package:
+Database table: Persons
+Storage bucket: person-photos

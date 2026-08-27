@@ -1,13 +1,14 @@
-স্মৃতি সংরক্ষণ — Final Admin Dashboard
+স্মৃতি সংরক্ষণ — Admin Dashboard (Login Fix)
 
-Admin:
-1) /admin.html খুলুন।
-2) Supabase Authentication-এর confirmed Admin email/password দিয়ে login করুন।
-3) নাম, পিতা/স্বামী, ঠিকানা, বয়স, মৃত্যুর তারিখ, মৃত্যুর কারণ ও ছবি দিন।
-4) Save করুন।
-5) তালিকা থেকে Edit/Delete করা যাবে।
+ফাইল:
+- admin.html — Admin Dashboard
+- config.js — Supabase project URL + publishable key
+- supabase_setup.sql — database, RLS ও storage setup
 
-নোট:
-- বর্তমান Persons table-এর id যদি int8/identity হয়, Admin code নতুন id নিজে বানায় না; database-এর identity id ব্যবহার করে।
-- Public website-এ সবাই তথ্য দেখতে পারবে।
-- Add/Edit/Delete শুধু authenticated Admin session-এর জন্য RLS policy দিয়ে অনুমোদিত।
+ব্যবহার:
+1) Supabase-এ supabase_setup.sql একবার Run করুন।
+2) Authentication > Users-এ Admin user Confirmed আছে নিশ্চিত করুন।
+3) admin.html খুলে Admin email/password দিয়ে Login করুন।
+4) Login error হলে এবার error message সরাসরি Login box-এর নিচে দেখা যাবে।
+
+নোট: Password বা secret key কাউকে শেয়ার করবেন না।
