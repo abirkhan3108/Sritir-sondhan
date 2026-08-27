@@ -1,20 +1,20 @@
 {
   "name": "smriti-sangrokkhon",
   "version": "1.0.0",
+  "description": "স্মৃতি সংরক্ষণ - Admin Dashboard",
   "private": true,
   "scripts": {
-    "build": "rm -rf www && mkdir -p www && cp *.html *.js *.css www/",
-    "sync": "npx cap sync android",
-    "open:android": "npx cap open android",
-    "icons": "npx capacitor-assets generate --android"
+    "build": "rm -rf www && mkdir -p www && cp index.html admin.html config.js logo.png www/",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android"
   },
   "dependencies": {
-    "@capacitor/core": "latest",
-    "@capacitor/android": "latest"
+    "@capacitor/core": "^7.4.3",
+    "@supabase/supabase-js": "^2.57.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "latest",
-    "@capacitor/assets": "^3.0.5",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
     "typescript": "^5.9.2"
   }
 }
