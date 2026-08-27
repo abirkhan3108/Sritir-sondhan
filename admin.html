@@ -1,189 +1,258 @@
 <!doctype html>
 <html lang="bn">
 <head>
-<link rel="icon" type="image/png" href="logo.png">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans Bengali",sans-serif;background:#f3f5f7;color:#17202a}
-header{background:#1f2b3b;color:white;padding:18px 20px;position:sticky;top:0;z-index:5}header h1{margin:0;font-size:24px}header p{margin:5px 0 0;opacity:.8}
-.wrap{max-width:1050px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:1fr 1.3fr;gap:18px}@media(max-width:800px){.grid{grid-template-columns:1fr}}
-.card{background:white;border-radius:16px;padding:18px;box-shadow:0 3px 15px #00000010;margin-bottom:18px}.card h2{margin-top:0;font-size:20px}
-label{display:block;font-weight:700;margin:12px 0 6px}input,textarea,select{width:100%;padding:12px;border:1px solid #ccd2d8;border-radius:10px;font-size:16px;background:#fff}textarea{min-height:100px;resize:vertical}
-button{border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:700;cursor:pointer}.primary{background:#1f2b3b;color:#fff}.secondary{background:#e8edf2;color:#17202a}.danger{background:#d64545;color:white}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}.status{padding:10px 12px;border-radius:10px;background:#eef7ee;margin-bottom:12px}.error{background:#fff0f0;color:#9b2226}.hidden{display:none}.person{border:1px solid #e1e5e9;border-radius:12px;padding:13px;margin:10px 0;display:flex;gap:12px;align-items:center}.person img{width:62px;height:62px;object-fit:cover;border-radius:10px;background:#e9edf0}.person .info{flex:1}.person h3{margin:0 0 4px}.person p{margin:2px 0;color:#68727d}.small{font-size:13px;color:#68727d}.search{margin-bottom:12px}.preview{max-width:130px;max-height:130px;border-radius:12px;display:none;margin-top:8px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0757d9">
+  <title>স্মৃতি সংরক্ষণ — Admin</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div style="text-align:center;padding:10px"><img src="logo.png" alt="স্মৃতি সংরক্ষণ" style="width:72px;height:72px;object-fit:contain"></div>
-<header><h1>🕊️ স্মৃতি সংরক্ষণ — Admin Dashboard</h1><p>ব্যক্তির তথ্য যোগ, সম্পাদনা, ছবি আপলোড ও মুছে ফেলার জন্য</p></header>
-<div class="wrap">
-<div id="loginCard" class="card hidden">
-<h2>🔐 Admin Login</h2>
-<p class="small">ড্যাশবোর্ড ব্যবহার করতে Supabase account দিয়ে লগইন করুন।</p>
-<form id="loginForm">
-<label>Email</label><input id="loginEmail" type="email" required autocomplete="email" placeholder="আপনার email">
-<label>Password</label><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Password">
-<div id="loginError" class="status error hidden" style="white-space:pre-wrap"></div>
-<div class="row"><button class="primary" id="loginBtn" type="submit">লগইন</button></div>
-</form>
-</div>
-<div id="userBar" class="card hidden">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-<div><b>🔐 Admin হিসেবে লগইন করা আছে</b><div id="userEmail" class="small"></div></div>
-<button class="secondary" id="logout">লগআউট</button>
-</div>
-</div>
-<div id="configMsg" class="card">
-<h2>প্রথমবার সেটআপ</h2>
-<p>এই ড্যাশবোর্ডে Supabase সংযোগের তথ্য বসাতে হবে। <b>config.js</b> ফাইলে আপনার Project URL ও anon/publishable key দিন।</p>
-<p class="small">তারপর SQL ফাইলের টেবিল ও Storage bucket তৈরি করুন।</p>
-</div>
 
-<div id="app" class="hidden">
-<div id="status" class="status hidden"></div>
-<div class="grid">
-<section class="card">
-<h2 id="formTitle">➕ নতুন ব্যক্তি যোগ করুন</h2>
-<form id="personForm">
-<input type="hidden" id="personId">
-<label>নাম *</label><input id="name" required placeholder="পূর্ণ নাম">
-<label>ছবি</label><input id="photo" type="file" accept="image/*"><img id="preview" class="preview">
-<label>জন্মতারিখ</label><input id="birthDate" type="date">
-<label>মৃত্যুর তারিখ</label><input id="deathDate" type="date">
-<label>ঠিকানা / গ্রাম</label><input id="address" placeholder="গ্রাম, উপজেলা, জেলা">
-<label>পরিবারের তথ্য</label><textarea id="family" placeholder="পরিবার/স্বজনের তথ্য"></textarea>
-<label>জীবনী</label><textarea id="bio" placeholder="সংক্ষিপ্ত জীবনী"></textarea>
-<label>স্মৃতি / কথা</label><textarea id="memory" placeholder="স্মৃতি, কথা বা বিশেষ তথ্য"></textarea>
-<div class="row"><button class="primary" type="submit">💾 সংরক্ষণ করুন</button><button class="secondary" type="button" id="cancel">বাতিল</button></div>
-</form>
-</section>
+<header class="topbar">
+  <button class="icon-btn" onclick="window.location.href='./index.html'">←</button>
 
-<section class="card">
-<h2>📋 সংরক্ষিত ব্যক্তিদের তালিকা</h2>
-<input class="search" id="search" placeholder="🔎 নাম দিয়ে খুঁজুন...">
-<div id="list">লোড হচ্ছে...</div>
-</section>
-</div>
-</div>
-</div>
+  <div>
+    <h1>Admin Dashboard</h1>
+    <small>স্মৃতি সংরক্ষণ</small>
+  </div>
 
-<script src="config.js"></script>
-<script>
-let sb=null, editing=null, people=[];
-const $=id=>document.getElementById(id);
-function show(msg,error=false){$('status').textContent=msg;$('status').className='status '+(error?'error':'');$('status').classList.remove('hidden');setTimeout(()=>$('status').classList.add('hidden'),4000)}
-function escapeHtml(s=''){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+  <span></span>
+</header>
 
-function showLoginError(message){
- const box=$('loginError');
- box.textContent=message;
- box.classList.remove('hidden');
-}
-function clearLoginError(){$('loginError').classList.add('hidden');$('loginError').textContent=''}
-async function init(){
- try{
-  if(!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY){
-   $('configMsg').classList.remove('hidden');
-   showLoginError('config.js-এ Supabase URL বা Publishable Key পাওয়া যায়নি।');
-   return;
-  }
-  sb=supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY);
-  const {data:{session},error}=await sb.auth.getSession();
-  if(error) throw error;
-  await updateAuthUI(session);
-  sb.auth.onAuthStateChange((_event, session)=>{
-   setTimeout(()=>updateAuthUI(session),0);
-  });
- }catch(err){
-  showLoginError('Supabase সংযোগে সমস্যা হয়েছে।\n\n'+(err.message||err));
-  $('loginCard').classList.remove('hidden');
- }
-}
-async function updateAuthUI(session){
- if(!session){
-  $('configMsg').classList.add('hidden');$('app').classList.add('hidden');$('userBar').classList.add('hidden');$('loginCard').classList.remove('hidden');return;
- }
- clearLoginError();
- $('loginCard').classList.add('hidden');$('userBar').classList.remove('hidden');$('userEmail').textContent=session.user.email||'';$('configMsg').classList.add('hidden');$('app').classList.remove('hidden');await loadPeople();
-}
-$('loginForm').addEventListener('submit',async e=>{
- e.preventDefault();
- clearLoginError();
- if(!sb){showLoginError('Supabase এখনো প্রস্তুত হয়নি। পেজটি একবার Refresh করুন।');return}
- const btn=$('loginBtn');
- btn.disabled=true;btn.textContent='লগইন হচ্ছে…';
- try{
-  const email=$('loginEmail').value.trim();
-  const password=$('loginPassword').value;
-  const {data,error}=await sb.auth.signInWithPassword({email,password});
-  if(error) throw error;
-  if(!data.session) throw new Error('লগইন সফল হলেও session পাওয়া যায়নি। Supabase Authentication settings পরীক্ষা করুন।');
-  await updateAuthUI(data.session);
-  show('লগইন সফল হয়েছে।');
- }catch(err){
-  let msg=err?.message||'লগইন করা যায়নি।';
-  if(err?.status===400) msg+='\n\nEmail/password সঠিক কি না এবং Supabase Authentication-এ user Confirmed আছে কি না পরীক্ষা করুন।';
-  showLoginError(msg);
- }finally{
-  btn.disabled=false;btn.textContent='লগইন';
- }
-});
-$('logout').addEventListener('click',async()=>{const {error}=await sb.auth.signOut();if(error)show(error.message,true)});
+<main class="container admin-dashboard">
 
-async function loadPeople(){
- const {data,error}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
- if(error){$('list').innerHTML='<p class="small">টেবিল/সংযোগ ঠিক করা হয়নি। supabase_setup.sql চালান।</p>';return}
- people=data||[];render();
-}
-function render(){
- const q=$('search').value.toLowerCase().trim();
- const rows=people.filter(p=>(p.name||'').toLowerCase().includes(q));
- if(!rows.length){$('list').innerHTML='<p class="small">কোনো তথ্য পাওয়া যায়নি।</p>';return}
- $('list').innerHTML=rows.map(p=>`<div class="person">
- <img src="${p.photo_url||''}" onerror="this.style.visibility='hidden'">
- <div class="info"><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.village||'')}</p><p class="small">${p.death_date? 'মৃত্যু: '+p.death_date:''}</p></div>
- <div class="row"><button class="secondary" onclick="editPerson('${p.id}')">✏️</button><button class="danger" onclick="deletePerson('${p.id}')">🗑️</button></div>
- </div>`).join('');
-}
-$('search').addEventListener('input',render);
-$('photo').addEventListener('change',e=>{const f=e.target.files[0];if(f){$('preview').src=URL.createObjectURL(f);$('preview').style.display='block'}});
+  <section class="dashboard-head">
+    <div>
+      <span class="eyebrow">ADMIN PANEL</span>
+      <h2>Profile Management</h2>
+      <p>Profile যোগ, খোঁজা, Edit এবং Delete করুন।</p>
+    </div>
 
-async function uploadPhoto(file,id){
- if(!file)return null;
- const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
- const path=`${id}.${ext}`;
- const up=await sb.storage.from('person-photos').upload(path,file,{upsert:true,contentType:file.type});
- if(up.error) throw up.error;
- return sb.storage.from('person-photos').getPublicUrl(path).data.publicUrl;
-}
-$('personForm').addEventListener('submit',async e=>{
- e.preventDefault();
- try{
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session) throw new Error('দয়া করে আগে Admin Login করুন।');
-  const id=editing||crypto.randomUUID(), file=$('photo').files[0];
-  let photo_url=people.find(p=>p.id===id)?.photo_url||null;
-  if(file) photo_url=await uploadPhoto(file,id);
-  const obj={id,name:$('name').value.trim(),birth_date:$('birthDate').value||null,death_date:$('deathDate').value||null,address:$('address').value.trim(),family_info:$('family').value.trim(),bio:$('bio').value.trim(),memory:$('memory').value.trim(),photo_url};
-  const {error}=await sb.from('profiles').upsert(obj);
-  if(error)throw error;
-  show(editing?'তথ্য আপডেট হয়েছে।':'নতুন ব্যক্তি যোগ হয়েছে।');resetForm();await loadPeople();
- }catch(err){show(err.message||'সংরক্ষণ করা যায়নি',true)}
-});
-function editPerson(id){
- const p=people.find(x=>x.id===id);if(!p)return;editing=id;
- $('formTitle').textContent='✏️ তথ্য সম্পাদনা';$('personId').value=id;$('name').value=p.name||'';$('birthDate').value=p.birth_date||'';$('deathDate').value=p.death_date||'';$('address').value=p.village||'';$('family').value=p.family_info||'';$('bio').value=p.bio||'';$('memory').value=p.memory||'';window.scrollTo({top:0,behavior:'smooth'});
-}
-async function deletePerson(id){
- if(!confirm('এই ব্যক্তির তথ্য মুছে ফেলবেন?'))return;
- const {error}=await sb.from('profiles').delete().eq('id',id);
- if(error){show(error.message,true);return}show('তথ্য মুছে ফেলা হয়েছে।');await loadPeople();
-}
-function resetForm(){editing=null;$('personForm').reset();$('formTitle').textContent='➕ নতুন ব্যক্তি যোগ করুন';$('preview').style.display='none'}
-$('cancel').onclick=resetForm;
-init();
-</script>
+    <button id="logoutBtn" class="logout-btn">↪ Logout</button>
+  </section>
+
+
+  <!-- LOGIN -->
+
+  <section id="loginSection" class="search-card login-card">
+
+    <div class="dash-icon">🔐</div>
+
+    <h2>Admin Login</h2>
+
+    <p>শুধু অনুমোদিত Admin প্রবেশ করতে পারবেন</p>
+
+    <form id="loginForm">
+
+      <input
+        id="email"
+        type="email"
+        required
+        autocomplete="username"
+        placeholder="Admin Email">
+
+      <input
+        id="password"
+        type="password"
+        required
+        autocomplete="current-password"
+        placeholder="Password">
+
+      <button type="submit" class="primary full-btn">
+        🔐 Login
+      </button>
+
+    </form>
+
+    <p id="loginMsg"></p>
+
+  </section>
+
+
+  <!-- ADMIN PANEL -->
+
+  <section id="adminPanel" class="hidden">
+
+    <!-- STATS -->
+
+    <div class="dash-stats">
+
+      <div class="dash-stat">
+        <span>👥</span>
+        <small>Total Profiles</small>
+        <strong id="dashTotal">0</strong>
+      </div>
+
+      <div class="dash-stat">
+        <span>📅</span>
+        <small>এই মাসে যুক্ত</small>
+        <strong id="dashMonthly">0</strong>
+      </div>
+
+      <div class="dash-stat">
+        <span>🔎</span>
+        <small>Management</small>
+        <strong>Active</strong>
+      </div>
+
+    </div>
+
+
+    <!-- ADD PROFILE -->
+
+    <section class="dashboard-card">
+
+      <div class="section-title">
+
+        <div>
+          <h3>➕ নতুন Profile</h3>
+          <p>নতুন ব্যক্তির তথ্য ও ছবি যোগ করুন</p>
+        </div>
+
+      </div>
+
+
+      <form id="profileForm">
+
+        <div class="form-grid">
+
+          <input
+            name="name"
+            required
+            placeholder="নাম *">
+
+          <input
+            name="father"
+            placeholder="পিতা/স্বামীর নাম">
+
+          <input
+            name="mother"
+            placeholder="মাতার নাম">
+
+          <input
+            name="spouse"
+            placeholder="স্বামী/স্ত্রীর নাম">
+
+          <input
+            name="village"
+            placeholder="গ্রাম">
+
+          <input
+            name="post"
+            placeholder="ডাকঘর">
+
+          <input
+            name="police"
+            placeholder="থানা">
+
+          <input
+            name="district"
+            placeholder="জেলা">
+
+          <input
+            name="age"
+            type="number"
+            min="0"
+            placeholder="বয়স">
+
+          <input
+            name="mobile"
+            type="tel"
+            placeholder="মোবাইল">
+
+          <input
+            name="address"
+            placeholder="ঠিকানা">
+
+          <input
+            name="death_reason"
+            placeholder="মৃত্যুর কারণ">
+
+          <input
+            name="date"
+            type="date">
+
+        </div>
+
+
+        <label class="upload-label">
+          🖼️ Profile Photo
+
+          <input
+            id="photoFile"
+            type="file"
+            accept="image/*">
+
+        </label>
+
+
+        <button
+          type="submit"
+          class="primary full-btn">
+
+          ➕ Profile যোগ করুন
+
+        </button>
+
+        <p id="adminMsg"></p>
+
+      </form>
+
+    </section>
+
+
+    <!-- SEARCH -->
+
+    <section class="dashboard-card">
+
+      <div class="section-title">
+
+        <div>
+          <h3>👤 Profiles</h3>
+          <p>Profile খুঁজে Edit অথবা Delete করুন</p>
+        </div>
+
+      </div>
+
+
+      <div class="admin-search">
+
+        <input
+          id="adminSearch"
+          type="search"
+          placeholder="নাম দিয়ে Profile খুঁজুন..."
+          autocomplete="off">
+
+        <button
+          id="adminSearchBtn"
+          class="primary"
+          type="button">
+
+          🔍 Search
+
+        </button>
+
+      </div>
+
+
+      <div
+        id="adminProfiles"
+        class="profile-list">
+
+      </div>
+
+    </section>
+
+  </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script src="./admin.js"></script>
+
 </body>
 </html>
