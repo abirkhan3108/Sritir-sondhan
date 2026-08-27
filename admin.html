@@ -1,635 +1,1396 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+<title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
 
-  <title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{
+  box-sizing:border-box;
+}
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+body{
+  margin:0;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans Bengali",
+    sans-serif;
+  background:#f3f7fc;
+  color:#172033;
+}
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Noto Sans Bengali",
-        sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
+.container{
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  padding:15px;
+}
 
-    .container {
-      width: 100%;
-      max-width: 900px;
-      margin: auto;
-      padding: 18px;
-    }
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 3px 18px rgba(0,0,0,.08);
+}
 
-    .header {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 3px 15px rgba(0,0,0,.08);
-    }
+.header{
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 3px 18px rgba(0,0,0,.08);
+}
 
-    h1 {
-      margin: 0 0 5px;
-      font-size: 25px;
-    }
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
 
-    h2 {
-      margin-top: 0;
-      font-size: 20px;
-    }
+h1{
+  margin:0;
+  font-size:25px;
+}
 
-    .subtitle {
-      color: #666;
-      font-size: 14px;
-    }
+h2{
+  margin:0 0 15px;
+  font-size:21px;
+}
 
-    .card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 3px 15px rgba(0,0,0,.08);
-    }
+.subtitle{
+  color:#687386;
+  margin-top:4px;
+}
 
-    label {
-      display: block;
-      margin-top: 12px;
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
+label{
+  display:block;
+  font-weight:700;
+  margin:12px 0 6px;
+}
 
-    input,
-    textarea,
-    button {
-      font: inherit;
-    }
+input,
+textarea,
+button{
+  font:inherit;
+}
 
-    input,
-    textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #d5d9de;
-      border-radius: 10px;
-      outline: none;
-      background: #fff;
-    }
+input,
+textarea{
+  width:100%;
+  border:1px solid #d7dee8;
+  border-radius:11px;
+  padding:12px;
+  outline:none;
+  background:#fff;
+}
 
-    input:focus,
-    textarea:focus {
-      border-color: #333;
-    }
+input:focus,
+textarea:focus{
+  border-color:#1261d6;
+  box-shadow:0 0 0 3px rgba(18,97,214,.10);
+}
 
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
 
-    button {
-      border: 0;
-      border-radius: 10px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font-weight: 700;
-    }
+button{
+  border:0;
+  border-radius:11px;
+  padding:11px 16px;
+  font-weight:800;
+  cursor:pointer;
+}
 
-    .primary {
-      background: #222;
-      color: white;
-    }
+.primary{
+  background:#1261d6;
+  color:#fff;
+}
 
-    .secondary {
-      background: #e9ecef;
-      color: #222;
-    }
+.secondary{
+  background:#e9edf3;
+  color:#222;
+}
 
-    .danger {
-      background: #d7263d;
-      color: #fff;
-    }
+.danger{
+  background:#df2944;
+  color:#fff;
+}
 
-    .success {
-      color: #168a4a;
-    }
+.success{
+  color:#128548;
+}
 
-    .error {
-      color: #d7263d;
-    }
+.error{
+  color:#d7263d;
+}
 
-    .hidden {
-      display: none !important;
-    }
+.hidden{
+  display:none!important;
+}
 
-    .message {
-      margin-top: 12px;
-      font-weight: 600;
-      min-height: 22px;
-    }
+.message{
+  min-height:24px;
+  margin-top:12px;
+  font-weight:700;
+}
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
 
-    .stat {
-      background: #f7f7f7;
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-    }
+.stat{
+  background:#f5f7fa;
+  border-radius:14px;
+  padding:16px;
+  text-align:center;
+}
 
-    .stat-number {
-      display: block;
-      font-size: 28px;
-      font-weight: 800;
-    }
+.stat-number{
+  display:block;
+  font-size:29px;
+  font-weight:900;
+}
 
-    .stat-label {
-      color: #666;
-      font-size: 13px;
-    }
+.stat-label{
+  color:#687386;
+  font-size:14px;
+}
 
-    .search-row {
-      display: flex;
-      gap: 8px;
-    }
+.search-row{
+  display:flex;
+  gap:8px;
+}
 
-    .search-row input {
-      flex: 1;
-    }
+.search-row input{
+  flex:1;
+}
 
-    .profile-item {
-      background: #fafafa;
-      border: 1px solid #e2e5e8;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
+.profile-item{
+  border:1px solid #dce3ec;
+  border-radius:16px;
+  padding:15px;
+  margin-bottom:12px;
+  background:#fff;
+}
 
-    .profile-name {
-      font-size: 18px;
-      font-weight: 800;
-    }
+.profile-name{
+  font-size:20px;
+  font-weight:900;
+  margin-bottom:4px;
+}
 
-    .profile-info {
-      margin-top: 5px;
-      color: #666;
-      font-size: 14px;
-      line-height: 1.7;
-    }
+.profile-info{
+  color:#687386;
+  line-height:1.75;
+  font-size:14px;
+}
 
-    .profile-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
+.profile-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
 
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
+.profile-actions button{
+  min-width:110px;
+}
 
-    .login-box {
-      max-width: 500px;
-      margin: 50px auto;
-    }
+.profile-photo{
+  width:85px;
+  height:85px;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:10px;
+  border:1px solid #ddd;
+}
 
-    .photo-preview {
-      margin-top: 10px;
-      max-width: 150px;
-      max-height: 150px;
-      border-radius: 12px;
-      display: none;
-      object-fit: cover;
-    }
+.photo-preview{
+  width:130px;
+  height:130px;
+  object-fit:cover;
+  border-radius:12px;
+  margin-top:10px;
+  display:none;
+}
 
-    @media (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
+.login-box{
+  max-width:500px;
+  margin:45px auto;
+}
 
-      .header,
-      .card {
-        padding: 14px;
-        border-radius: 13px;
-      }
+/* Modal */
 
-      h1 {
-        font-size: 22px;
-      }
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+}
 
-      .search-row {
-        flex-direction: column;
-      }
+.modal.show{
+  display:flex;
+}
 
-      .search-row button {
-        width: 100%;
-      }
+.modal-box{
+  background:#fff;
+  width:100%;
+  max-width:600px;
+  max-height:90vh;
+  overflow:auto;
+  border-radius:18px;
+  padding:20px;
+}
 
-      .topbar {
-        align-items: flex-start;
-      }
-    }
-  </style>
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.close-btn{
+  background:#eee;
+  color:#222;
+  padding:8px 12px;
+}
+
+.modal-actions{
+  display:flex;
+  gap:8px;
+  margin-top:18px;
+}
+
+.modal-actions button{
+  flex:1;
+}
+
+.loading{
+  text-align:center;
+  padding:20px;
+  color:#687386;
+}
+
+@media(max-width:600px){
+
+  .container{
+    padding:10px;
+  }
+
+  .card,
+  .header{
+    padding:14px;
+    border-radius:14px;
+  }
+
+  h1{
+    font-size:22px;
+  }
+
+  .search-row{
+    flex-direction:column;
+  }
+
+  .search-row button{
+    width:100%;
+  }
+
+  .topbar{
+    align-items:flex-start;
+  }
+
+  .profile-actions{
+    flex-direction:row;
+  }
+
+  .profile-actions button{
+    flex:1;
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr;
+  }
+}
+</style>
 </head>
 
 <body>
 
-  <!-- =====================================================
-       LOGIN
-       ===================================================== -->
+<!-- ================= LOGIN ================= -->
 
-  <section id="loginSection">
-    <div class="container login-box">
+<section id="loginSection">
 
-      <div class="card">
+  <div class="container login-box">
 
-        <h1>🔐 Admin Login</h1>
+    <div class="card">
 
-        <p class="subtitle">
-          স্মৃতি সংরক্ষণ — Admin Dashboard
-        </p>
+      <h1>🔐 Admin Login</h1>
 
-        <form id="loginForm">
+      <p class="subtitle">
+        স্মৃতি সংরক্ষণ — Admin Dashboard
+      </p>
 
-          <label for="email">
-            Email
-          </label>
+      <form id="loginForm">
 
-          <input
-            id="email"
-            type="email"
-            placeholder="Admin Email"
-            autocomplete="username"
-            required
-          >
+        <label for="email">
+          Email
+        </label>
 
-          <label for="password">
-            Password
-          </label>
+        <input
+          id="email"
+          type="email"
+          placeholder="Admin Email"
+          autocomplete="username"
+          required
+        >
 
-          <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            autocomplete="current-password"
-            required
-          >
+        <label for="password">
+          Password
+        </label>
 
-          <button
-            type="submit"
-            class="primary"
-            style="width:100%;margin-top:16px;"
-          >
-            Login
-          </button>
+        <input
+          id="password"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        >
 
-        </form>
+        <button
+          type="submit"
+          class="primary"
+          style="width:100%;margin-top:16px;"
+        >
+          🔐 Login
+        </button>
 
-        <div
-          id="loginMsg"
-          class="message"
-        ></div>
+      </form>
 
-      </div>
+      <div id="loginMsg" class="message"></div>
 
     </div>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- =====================================================
-       ADMIN PANEL
-       ===================================================== -->
+<!-- ================= ADMIN PANEL ================= -->
 
-  <main
-    id="adminPanel"
-    class="hidden"
-  >
+<main id="adminPanel" class="hidden">
 
-    <div class="container">
+<div class="container">
 
-      <!-- Header -->
+  <!-- HEADER -->
 
-      <div class="header">
+  <div class="header">
 
-        <div class="topbar">
+    <div class="topbar">
 
-          <div>
-            <h1>স্মৃতি সংরক্ষণ</h1>
+      <div>
+        <h1>স্মৃতি সংরক্ষণ</h1>
 
-            <div class="subtitle">
-              Admin Dashboard
-            </div>
-          </div>
-
-          <button
-            id="logoutBtn"
-            type="button"
-            class="secondary"
-          >
-            Logout
-          </button>
-
+        <div class="subtitle">
+          Admin Dashboard
         </div>
+      </div>
+
+      <button
+        id="logoutBtn"
+        class="secondary"
+        type="button"
+      >
+        Logout
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- STATS -->
+
+  <div class="card">
+
+    <h2>📊 Dashboard</h2>
+
+    <div class="stats">
+
+      <div class="stat">
+
+        <span
+          id="dashTotal"
+          class="stat-number"
+        >
+          0
+        </span>
+
+        <span class="stat-label">
+          মোট Profile
+        </span>
 
       </div>
 
+      <div class="stat">
 
-      <!-- =================================================
-           STATS
-           ================================================= -->
+        <span
+          id="dashMonthly"
+          class="stat-number"
+        >
+          0
+        </span>
 
-      <div class="card">
-
-        <h2>📊 Dashboard</h2>
-
-        <div class="stats">
-
-          <div class="stat">
-
-            <span
-              id="dashTotal"
-              class="stat-number"
-            >
-              0
-            </span>
-
-            <span class="stat-label">
-              মোট Profile
-            </span>
-
-          </div>
-
-          <div class="stat">
-
-            <span
-              id="dashMonthly"
-              class="stat-number"
-            >
-              0
-            </span>
-
-            <span class="stat-label">
-              এই মাসে যোগ
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- =================================================
-           ADD PROFILE
-           ================================================= -->
-
-      <div class="card">
-
-        <h2>➕ নতুন Profile যোগ করুন</h2>
-
-        <form id="profileForm">
-
-          <label for="name">
-            নাম *
-          </label>
-
-          <input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="নাম লিখুন"
-            required
-          >
-
-
-          <label for="father">
-            পিতা / স্বামীর নাম
-          </label>
-
-          <input
-            id="father"
-            name="father"
-            type="text"
-            placeholder="পিতা / স্বামীর নাম"
-          >
-
-
-          <label for="village">
-            গ্রাম
-          </label>
-
-          <input
-            id="village"
-            name="village"
-            type="text"
-            placeholder="গ্রামের নাম"
-          >
-
-
-          <label for="age">
-            বয়স
-          </label>
-
-          <input
-            id="age"
-            name="age"
-            type="number"
-            min="0"
-            placeholder="বয়স"
-          >
-
-
-          <label for="death_reason">
-            মৃত্যুর কারণ
-          </label>
-
-          <textarea
-            id="death_reason"
-            name="death_reason"
-            placeholder="মৃত্যুর কারণ লিখুন"
-          ></textarea>
-
-
-          <label for="date">
-            মৃত্যুর তারিখ
-          </label>
-
-          <input
-            id="date"
-            name="date"
-            type="date"
-          >
-
-
-          <label for="photoFile">
-            ছবি
-          </label>
-
-          <input
-            id="photoFile"
-            name="photoFile"
-            type="file"
-            accept="image/*"
-          >
-
-          <img
-            id="photoPreview"
-            class="photo-preview"
-            alt="Photo preview"
-          >
-
-
-          <button
-            type="submit"
-            class="primary"
-            style="margin-top:16px;width:100%;"
-          >
-            💾 Profile সংরক্ষণ করুন
-          </button>
-
-        </form>
-
-        <div
-          id="adminMsg"
-          class="message"
-        ></div>
-
-      </div>
-
-
-      <!-- =================================================
-           SEARCH
-           ================================================= -->
-
-      <div class="card">
-
-        <h2>🔎 Profile Search</h2>
-
-        <div class="search-row">
-
-          <input
-            id="adminSearch"
-            type="search"
-            placeholder="নাম দিয়ে খুঁজুন..."
-          >
-
-          <button
-            id="adminSearchBtn"
-            type="button"
-            class="primary"
-          >
-            Search
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- =================================================
-           PROFILE LIST
-           ================================================= -->
-
-      <div class="card">
-
-        <h2>👥 Profiles</h2>
-
-        <div id="adminProfiles">
-
-          <p>
-            Profile লোড হচ্ছে...
-          </p>
-
-        </div>
+        <span class="stat-label">
+          এই মাসে যোগ
+        </span>
 
       </div>
 
     </div>
 
-  </main>
+  </div>
 
 
-  <!-- =====================================================
-       CONFIG
-       ===================================================== -->
+  <!-- ADD PROFILE -->
 
-  <script src="config.js"></script>
+  <div class="card">
 
-  <!-- =====================================================
-       PHOTO PREVIEW
-       ===================================================== -->
+    <h2>➕ নতুন Profile যোগ করুন</h2>
 
-  <script>
+    <form id="profileForm">
 
-    const photoInput =
-      document.getElementById("photoFile");
+      <label for="name">
+        নাম *
+      </label>
 
-    const photoPreview =
-      document.getElementById("photoPreview");
+      <input
+        id="name"
+        type="text"
+        required
+        placeholder="নাম লিখুন"
+      >
 
-    if (photoInput && photoPreview) {
 
-      photoInput.addEventListener(
-        "change",
-        function () {
+      <label for="father_spouse">
+        পিতা / স্বামীর নাম
+      </label>
 
-          const file =
-            photoInput.files &&
-            photoInput.files[0];
+      <input
+        id="father_spouse"
+        type="text"
+        placeholder="পিতা / স্বামীর নাম"
+      >
 
-          if (!file) {
 
-            photoPreview.style.display =
-              "none";
+      <label for="village">
+        গ্রাম
+      </label>
 
-            photoPreview.removeAttribute(
-              "src"
-            );
+      <input
+        id="village"
+        type="text"
+        placeholder="গ্রামের নাম"
+      >
 
-            return;
-          }
 
-          const url =
-            URL.createObjectURL(file);
+      <label for="age">
+        বয়স
+      </label>
 
-          photoPreview.src = url;
+      <input
+        id="age"
+        type="number"
+        min="0"
+        placeholder="বয়স"
+      >
 
-          photoPreview.style.display =
-            "block";
-        }
-      );
+
+      <label for="death_reason">
+        মৃত্যুর কারণ
+      </label>
+
+      <textarea
+        id="death_reason"
+        placeholder="মৃত্যুর কারণ লিখুন"
+      ></textarea>
+
+
+      <label for="death_date">
+        মৃত্যুর তারিখ
+      </label>
+
+      <input
+        id="death_date"
+        type="date"
+      >
+
+
+      <label for="photoFile">
+        ছবি
+      </label>
+
+      <input
+        id="photoFile"
+        type="file"
+        accept="image/*"
+      >
+
+      <img
+        id="photoPreview"
+        class="photo-preview"
+        alt="Photo preview"
+      >
+
+
+      <button
+        id="saveProfileBtn"
+        type="submit"
+        class="primary"
+        style="margin-top:16px;width:100%;"
+      >
+        💾 Profile সংরক্ষণ করুন
+      </button>
+
+    </form>
+
+    <div id="adminMsg" class="message"></div>
+
+  </div>
+
+
+  <!-- SEARCH -->
+
+  <div class="card">
+
+    <h2>🔎 Profile Search</h2>
+
+    <div class="search-row">
+
+      <input
+        id="adminSearch"
+        type="search"
+        placeholder="নাম দিয়ে খুঁজুন..."
+      >
+
+      <button
+        id="adminSearchBtn"
+        type="button"
+        class="primary"
+      >
+        🔎 Search
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- PROFILE LIST -->
+
+  <div class="card">
+
+    <h2>👥 Profiles</h2>
+
+    <div id="adminProfiles">
+      <div class="loading">
+        Profile লোড হচ্ছে...
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</main>
+
+
+<!-- ================= EDIT MODAL ================= -->
+
+<div
+  id="editModal"
+  class="modal"
+>
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h2>
+        ✏️ Profile Edit
+      </h2>
+
+      <button
+        id="closeEditBtn"
+        type="button"
+        class="close-btn"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="editForm">
+
+      <input
+        id="editId"
+        type="hidden"
+      >
+
+
+      <label for="editName">
+        নাম *
+      </label>
+
+      <input
+        id="editName"
+        type="text"
+        required
+      >
+
+
+      <label for="editFather">
+        পিতা / স্বামীর নাম
+      </label>
+
+      <input
+        id="editFather"
+        type="text"
+      >
+
+
+      <label for="editVillage">
+        গ্রাম
+      </label>
+
+      <input
+        id="editVillage"
+        type="text"
+      >
+
+
+      <label for="editAge">
+        বয়স
+      </label>
+
+      <input
+        id="editAge"
+        type="number"
+        min="0"
+      >
+
+
+      <label for="editReason">
+        মৃত্যুর কারণ
+      </label>
+
+      <textarea
+        id="editReason"
+      ></textarea>
+
+
+      <label for="editDate">
+        মৃত্যুর তারিখ
+      </label>
+
+      <input
+        id="editDate"
+        type="date"
+      >
+
+
+      <div
+        id="editCurrentPhoto"
+        style="margin-top:12px;"
+      ></div>
+
+
+      <label for="editPhoto">
+        নতুন ছবি
+      </label>
+
+      <input
+        id="editPhoto"
+        type="file"
+        accept="image/*"
+      >
+
+
+      <img
+        id="editPhotoPreview"
+        class="photo-preview"
+        alt="Preview"
+      >
+
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          id="cancelEditBtn"
+          class="secondary"
+        >
+          বাতিল
+        </button>
+
+        <button
+          type="submit"
+          class="primary"
+        >
+          💾 পরিবর্তন সংরক্ষণ
+        </button>
+
+      </div>
+
+    </form>
+
+    <div
+      id="editMsg"
+      class="message"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= CONFIG ================= -->
+
+<script src="config.js"></script>
+
+
+<script>
+"use strict";
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+let db = null;
+
+const TABLE = "profiles";
+
+/*
+  তোমার Supabase SQL অনুযায়ী আসল bucket:
+  person-photos
+*/
+const BUCKET = "person-photos";
+
+
+if (
+  window.supabase &&
+  window.SUPABASE_URL &&
+  window.SUPABASE_ANON_KEY
+) {
+
+  db = window.supabase.createClient(
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY
+  );
+
+}
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const loginSection =
+  document.getElementById("loginSection");
+
+const adminPanel =
+  document.getElementById("adminPanel");
+
+const loginForm =
+  document.getElementById("loginForm");
+
+const loginMsg =
+  document.getElementById("loginMsg");
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+const profileForm =
+  document.getElementById("profileForm");
+
+const adminMsg =
+  document.getElementById("adminMsg");
+
+const adminProfiles =
+  document.getElementById("adminProfiles");
+
+const adminSearch =
+  document.getElementById("adminSearch");
+
+const adminSearchBtn =
+  document.getElementById("adminSearchBtn");
+
+const dashTotal =
+  document.getElementById("dashTotal");
+
+const dashMonthly =
+  document.getElementById("dashMonthly");
+
+const photoFile =
+  document.getElementById("photoFile");
+
+const photoPreview =
+  document.getElementById("photoPreview");
+
+const editModal =
+  document.getElementById("editModal");
+
+const editForm =
+  document.getElementById("editForm");
+
+const editMsg =
+  document.getElementById("editMsg");
+
+const editPhoto =
+  document.getElementById("editPhoto");
+
+const editPhotoPreview =
+  document.getElementById("editPhotoPreview");
+
+const editCurrentPhoto =
+  document.getElementById("editCurrentPhoto");
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replace(/[&<>"']/g, function(char) {
+
+      return {
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+      }[char];
+
+    });
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
+
+function formatDate(value) {
+
+  if (!value) {
+    return "—";
+  }
+
+  const d = new Date(value + "T00:00:00");
+
+  if (Number.isNaN(d.getTime())) {
+    return escapeHTML(value);
+  }
+
+  return new Intl.DateTimeFormat(
+    "bn-BD",
+    {
+      day:"numeric",
+      month:"long",
+      year:"numeric"
+    }
+  ).format(d);
+
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showAdminMessage(text, type) {
+
+  adminMsg.textContent = text;
+
+  adminMsg.className =
+    "message " +
+    (type === "error"
+      ? "error"
+      : "success");
+
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+async function checkLogin() {
+
+  if (!db) {
+
+    loginMsg.textContent =
+      "❌ Supabase config.js পাওয়া যাচ্ছে না।";
+
+    loginSection.classList.remove("hidden");
+    adminPanel.classList.add("hidden");
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } = await db.auth.getSession();
+
+
+  if (error) {
+
+    console.error(error);
+
+    loginMsg.textContent =
+      "❌ Session যাচাই করা যায়নি: " +
+      error.message;
+
+    return;
+  }
+
+
+  if (data.session) {
+
+    loginSection.classList.add("hidden");
+
+    adminPanel.classList.remove("hidden");
+
+    await loadProfiles();
+
+    await updateStats();
+
+  } else {
+
+    loginSection.classList.remove("hidden");
+
+    adminPanel.classList.add("hidden");
+
+  }
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+loginForm.addEventListener(
+  "submit",
+  async function(e) {
+
+    e.preventDefault();
+
+    loginMsg.textContent =
+      "লগইন হচ্ছে...";
+
+    if (!db) {
+
+      loginMsg.textContent =
+        "❌ Supabase config পাওয়া যাচ্ছে না।";
+
+      return;
     }
 
-  </script>
+
+    const email =
+      document.getElementById("email")
+      .value
+      .trim();
+
+    const password =
+      document.getElementById("password")
+      .value;
 
 
-  <!-- =====================================================
-       ADMIN JS
-       ===================================================== -->
+    const {
+      error
+    } =
+      await db.auth.signInWithPassword({
+        email,
+        password
+      });
 
-  <script src="admin.js"></script>
 
-</body>
-</html>
+    if (error) {
+
+      loginMsg.textContent =
+        "❌ " + error.message;
+
+      return;
+    }
+
+
+    loginMsg.textContent =
+      "✅ Login সফল";
+
+    await checkLogin();
+
+  }
+);
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+logoutBtn.addEventListener(
+  "click",
+  async function() {
+
+    if (db) {
+
+      await db.auth.signOut();
+
+    }
+
+    adminPanel.classList.add("hidden");
+
+    loginSection.classList.remove("hidden");
+
+    loginMsg.textContent =
+      "Logout হয়েছে।";
+
+  }
+);
+
+
+/* =========================================================
+   PHOTO PREVIEW
+========================================================= */
+
+photoFile.addEventListener(
+  "change",
+  function() {
+
+    const file =
+      photoFile.files &&
+      photoFile.files[0];
+
+
+    if (!file) {
+
+      photoPreview.style.display = "none";
+
+      photoPreview.removeAttribute("src");
+
+      return;
+    }
+
+
+    if (file.size > 5 * 1024 * 1024) {
+
+      alert(
+        "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন।"
+      );
+
+      photoFile.value = "";
+
+      photoPreview.style.display = "none";
+
+      return;
+    }
+
+
+    photoPreview.src =
+      URL.createObjectURL(file);
+
+    photoPreview.style.display =
+      "block";
+
+  }
+);
+
+
+/* =========================================================
+   UPLOAD PHOTO
+========================================================= */
+
+async function uploadPhoto(file) {
+
+  if (!file) {
+    return null;
+  }
+
+
+  if (file.size > 5 * 1024 * 1024) {
+
+    throw new Error(
+      "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন।"
+    );
+
+  }
+
+
+  const extension =
+    (
+      file.name
+        .split(".")
+        .pop() || "jpg"
+    )
+    .toLowerCase();
+
+
+  const path =
+    "profiles/" +
+    crypto.randomUUID() +
+    "." +
+    extension;
+
+
+  const {
+    error
+  } =
+    await db.storage
+      .from(BUCKET)
+      .upload(
+        path,
+        file,
+        {
+          upsert:false,
+          contentType:file.type
+        }
+      );
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  const {
+    data
+  } =
+    db.storage
+      .from(BUCKET)
+      .getPublicUrl(path);
+
+
+  return data.publicUrl;
+
+}
+
+
+/* =========================================================
+   ADD PROFILE
+========================================================= */
+
+profileForm.addEventListener(
+  "submit",
+  async function(e) {
+
+    e.preventDefault();
+
+    showAdminMessage(
+      "⏳ Profile সংরক্ষণ হচ্ছে...",
+      "success"
+    );
+
+
+    try {
+
+      if (!db) {
+        throw new Error(
+          "Supabase connection পাওয়া যায়নি।"
+        );
+      }
+
+
+      const {
+        data: sessionData
+      } =
+        await db.auth.getSession();
+
+
+      if (!sessionData.session) {
+
+        throw new Error(
+          "আগে Admin Login করুন।"
+        );
+
+      }
+
+
+      const name =
+        document
+          .getElementById("name")
+          .value
+          .trim();
+
+
+      const father =
+        document
+          .getElementById("father_spouse")
+          .value
+          .trim();
+
+
+      const village =
+        document
+          .getElementById("village")
+          .value
+          .trim();
+
+
+      const ageText =
+        document
+          .getElementById("age")
+          .value
+          .trim();
+
+
+      const reason =
+        document
+          .getElementById("death_reason")
+          .value
+          .trim();
+
+
+      const deathDate =
+        document
+          .getElementById("death_date")
+          .value;
+
+
+      if (!name) {
+
+        throw new Error(
+          "নাম দিতে হবে।"
+        );
+
+      }
+
+
+      const age =
+        ageText
+          ? Number(ageText)
+          : null;
+
+
+      let photoUrl = null;
+
+
+      if (
+        photoFile.files &&
+        photoFile.files[0]
+      ) {
+
+        photoUrl =
+          await uploadPhoto(
+            photoFile.files[0]
+          );
+
+      }
+
+
+      /*
+        এখানে Supabase-এর আসল column name ব্যবহার করা হয়েছে।
+      */
+
+      const record = {
+
+        name:name,
+
+        father_spouse:
+          father || null,
+
+        village:
+          village || null,
+
+        age:age,
+
+        death_reason:
+          reason || null,
+
+        death_date:
+          deathDate || null,
+
+        photo_url:
+          photoUrl
+
+      };
+
+
+      const {
+        error
+      } =
+        await db
+          .from(TABLE)
+          .insert(record);
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      profileForm.reset();
+
+      photoPreview.style.display =
+        "none";
+
+      photoPreview.removeAttribute(
+        "src"
+      );
+
+
+      showAdminMessage(
+        "✅ Profile সফলভাবে যোগ হয়েছে।",
+        "success"
+      );
+
+
+      await loadProfiles(
+        adminSearch.value.trim()
+      );
+
+      await updateStats();
+
+
+    } catch(error) {
+
+      console.error(error);
+
+      showAdminMessage(
+        "❌ " +
+        (error.message || error),
+        "error"
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   LOAD PROFILES
+========================================================= */
+
+async function
