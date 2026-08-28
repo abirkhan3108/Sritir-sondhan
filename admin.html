@@ -1,320 +1,419 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
 
-<title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>স্মৃতি সংরক্ষণ — Admin Dashboard</title>
 
-<style>
-*{
-  box-sizing:border-box;
-}
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-body{
-  margin:0;
-  padding:0;
-  background:#f4f6f8;
-  color:#20242a;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Noto Sans Bengali",
-    sans-serif;
-}
+  <style>
 
-.container{
-  width:100%;
-  max-width:900px;
-  margin:auto;
-  padding:14px;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-.card{
-  background:#fff;
-  border-radius:16px;
-  padding:18px;
-  margin-bottom:18px;
-  box-shadow:0 3px 15px rgba(0,0,0,.08);
-}
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+    }
 
-h1{
-  margin:0 0 5px;
-  font-size:25px;
-}
+    body {
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans Bengali",
+        sans-serif;
 
-h2{
-  margin:0 0 15px;
-  font-size:20px;
-}
+      background: #f4f6f8;
+      color: #222;
 
-.subtitle{
-  color:#68707b;
-  font-size:14px;
-}
+      -webkit-tap-highlight-color: transparent;
+    }
 
-label{
-  display:block;
-  margin-top:12px;
-  margin-bottom:6px;
-  font-weight:700;
-}
 
-input,
-textarea,
-button{
-  font:inherit;
-}
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+      padding: 14px;
+    }
 
-input,
-textarea{
-  width:100%;
-  padding:13px;
-  border:1px solid #d5dbe3;
-  border-radius:11px;
-  outline:none;
-  background:#fff;
-}
 
-textarea{
-  min-height:90px;
-  resize:vertical;
-}
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
 
-input:focus,
-textarea:focus{
-  border-color:#1769d2;
-}
+      box-shadow:
+        0 3px 15px rgba(0,0,0,.08);
+    }
 
-button{
-  border:0;
-  border-radius:12px;
-  padding:13px 18px;
-  font-weight:800;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
 
-.primary{
-  background:#1266d8;
-  color:#fff;
-}
+    h1 {
+      margin: 0 0 5px;
+      font-size: 24px;
+    }
 
-.secondary{
-  background:#e9edf2;
-  color:#222;
-}
 
-.danger{
-  background:#d9253d;
-  color:#fff;
-}
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
 
-.hidden{
-  display:none !important;
-}
 
-.message{
-  min-height:24px;
-  margin-top:12px;
-  font-weight:700;
-}
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+    }
 
-.success{
-  color:#138a4b;
-}
 
-.error{
-  color:#d9253d;
-}
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
 
-.login-box{
-  max-width:500px;
-  margin:50px auto;
-}
+    input,
+    textarea,
+    button {
+      font: inherit;
+    }
 
-/* SEARCH */
 
-.search-row{
-  display:flex;
-  gap:10px;
-}
+    input,
+    textarea {
+      width: 100%;
 
-.search-row input{
-  flex:1;
-}
+      padding: 13px;
 
-/* PROFILE */
+      border:
+        1px solid #d5d9de;
 
-.profile{
-  background:#fff;
-  border:1px solid #dfe4eb;
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:14px;
-}
+      border-radius: 11px;
 
-.profile-name{
-  font-size:21px;
-  font-weight:900;
-  margin-bottom:7px;
-}
+      background: #fff;
 
-.profile-info{
-  color:#626b77;
-  line-height:1.8;
-  font-size:14px;
-}
+      outline: none;
+    }
 
-.profile-photo{
-  width:110px;
-  height:110px;
-  object-fit:cover;
-  border-radius:12px;
-  display:block;
-  margin-bottom:12px;
-}
 
-/*
-================================================
-EDIT / DELETE BUTTON
-================================================
-*/
+    input:focus,
+    textarea:focus {
+      border-color: #222;
+    }
 
-.profile-buttons{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  margin-top:16px;
-  width:100%;
-}
 
-.profile-buttons button{
-  flex:1;
-  min-height:50px;
-  font-size:16px;
-  position:relative;
-  z-index:20;
-}
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
 
-.edit-button{
-  background:#1266d8;
-  color:#fff;
-}
 
-.delete-button{
-  background:#d9253d;
-  color:#fff;
-}
+    button {
+      border: 0;
+      border-radius: 11px;
 
-/*
-================================================
-EDIT BOX
-================================================
-*/
+      padding: 13px 17px;
 
-.edit-box{
-  margin-top:16px;
-  padding:16px;
-  border-radius:14px;
-  background:#f5f9ff;
-  border:2px solid #c5dcff;
-}
+      font-weight: 700;
 
-.edit-title{
-  font-size:18px;
-  font-weight:900;
-  margin-bottom:10px;
-}
+      cursor: pointer;
 
-.edit-buttons{
-  display:flex;
-  gap:12px;
-  margin-top:16px;
-}
+      -webkit-user-select: none;
+      user-select: none;
 
-.edit-buttons button{
-  flex:1;
-}
+      touch-action: manipulation;
+    }
 
-/* MOBILE */
 
-@media(max-width:600px){
+    button:active {
+      transform: scale(.98);
+    }
 
-  .container{
-    padding:10px;
-  }
 
-  .card{
-    padding:14px;
-    border-radius:14px;
-  }
+    .primary {
+      background: #222;
+      color: #fff;
+    }
 
-  h1{
-    font-size:22px;
-  }
 
-  .topbar{
-    align-items:flex-start;
-  }
+    .secondary {
+      background: #e9ecef;
+      color: #222;
+    }
 
-  .search-row{
-    flex-direction:column;
-  }
 
-  .search-row button{
-    width:100%;
-  }
+    .danger {
+      background: #d7263d;
+      color: #fff;
+    }
 
-  /*
-  Edit/Delete পাশাপাশি থাকবে,
-  কিন্তু touch area আলাদা থাকবে।
-  */
 
-  .profile-buttons{
-    gap:16px;
-  }
+    .edit-btn {
+      background: #1261d6;
+      color: #fff;
+    }
 
-  .profile-buttons button{
-    min-height:54px;
-    padding:12px 8px;
-  }
 
-  .edit-buttons{
-    flex-direction:column;
-  }
+    .success {
+      color: #168a4a;
+    }
 
-  .edit-buttons button{
-    width:100%;
-  }
 
-}
+    .error {
+      color: #d7263d;
+    }
 
-/* খুব ছোট স্ক্রিন */
 
-@media(max-width:360px){
+    .hidden {
+      display: none !important;
+    }
 
-  .profile-buttons{
-    gap:12px;
-  }
 
-  .profile-buttons button{
-    font-size:14px;
-  }
+    .message {
+      min-height: 24px;
+      margin-top: 12px;
+      font-weight: 700;
+    }
 
-}
-</style>
+
+    /* HEADER */
+
+    .header {
+      background: #fff;
+
+      border-radius: 16px;
+
+      padding: 18px;
+
+      margin-bottom: 16px;
+
+      box-shadow:
+        0 3px 15px rgba(0,0,0,.08);
+    }
+
+
+    .topbar {
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 12px;
+    }
+
+
+    /* LOGIN */
+
+    .login-box {
+      max-width: 500px;
+      margin: 45px auto;
+    }
+
+
+    /* STATS */
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, 1fr);
+
+      gap: 12px;
+    }
+
+
+    .stat {
+      background: #f7f7f7;
+
+      border-radius: 13px;
+
+      padding: 16px;
+
+      text-align: center;
+    }
+
+
+    .stat-number {
+      display: block;
+
+      font-size: 28px;
+
+      font-weight: 800;
+    }
+
+
+    .stat-label {
+      color: #666;
+
+      font-size: 13px;
+    }
+
+
+    /* SEARCH */
+
+    .search-row {
+      display: flex;
+
+      gap: 10px;
+    }
+
+
+    .search-row input {
+      flex: 1;
+    }
+
+
+    /* PROFILE */
+
+    .profile-item {
+      background: #fafafa;
+
+      border:
+        1px solid #e2e5e8;
+
+      border-radius: 14px;
+
+      padding: 15px;
+
+      margin-bottom: 13px;
+    }
+
+
+    .profile-name {
+      font-size: 19px;
+
+      font-weight: 800;
+
+      margin-bottom: 5px;
+    }
+
+
+    .profile-info {
+      color: #666;
+
+      font-size: 14px;
+
+      line-height: 1.7;
+
+      margin-bottom: 12px;
+    }
+
+
+    /*
+      IMPORTANT:
+      Edit/Delete button দুটো
+      সম্পূর্ণ আলাদা।
+    */
+
+    .profile-actions {
+      display: flex;
+
+      width: 100%;
+
+      gap: 10px;
+    }
+
+
+    .profile-actions button {
+      flex: 1;
+
+      min-height: 52px;
+
+      font-size: 16px;
+
+      touch-action: manipulation;
+    }
+
+
+    .photo-preview {
+      display: none;
+
+      margin-top: 10px;
+
+      width: 140px;
+      height: 140px;
+
+      object-fit: cover;
+
+      border-radius: 12px;
+
+      border:
+        1px solid #ddd;
+    }
+
+
+    /* MOBILE */
+
+    @media (max-width: 600px) {
+
+      .container {
+        padding: 10px;
+      }
+
+
+      .card,
+      .header {
+        padding: 14px;
+
+        border-radius: 13px;
+      }
+
+
+      h1 {
+        font-size: 22px;
+      }
+
+
+      h2 {
+        font-size: 19px;
+      }
+
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+
+      .search-row {
+        flex-direction: column;
+      }
+
+
+      .search-row button {
+        width: 100%;
+      }
+
+
+      .profile-actions {
+        gap: 8px;
+      }
+
+
+      .profile-actions button {
+        min-height: 54px;
+
+        font-size: 16px;
+      }
+
+    }
+
+  </style>
 </head>
 
 
@@ -327,57 +426,67 @@ EDIT BOX
 
 <section id="loginSection">
 
-<div class="container login-box">
+  <div class="container login-box">
 
-<div class="card">
+    <div class="card">
 
-<h1>🔐 Admin Login</h1>
+      <h1>🔐 Admin Login</h1>
 
-<p class="subtitle">
-স্মৃতি সংরক্ষণ — Admin Dashboard
-</p>
+      <p class="subtitle">
+        স্মৃতি সংরক্ষণ — Admin Dashboard
+      </p>
 
-<form id="loginForm">
 
-<label for="email">
-Email
-</label>
+      <form id="loginForm">
 
-<input
-  id="email"
-  type="email"
-  placeholder="Admin Email"
-  autocomplete="username"
-  required
->
+        <label for="email">
+          Email
+        </label>
 
-<label for="password">
-Password
-</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="Admin Email"
+          autocomplete="username"
+          required
+        >
 
-<input
-  id="password"
-  type="password"
-  placeholder="Password"
-  autocomplete="current-password"
-  required
->
 
-<button
-  type="submit"
-  class="primary"
-  style="width:100%;margin-top:16px;"
->
-🔐 Login
-</button>
+        <label for="password">
+          Password
+        </label>
 
-</form>
+        <input
+          id="password"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        >
 
-<div id="loginMsg" class="message"></div>
 
-</div>
+        <button
+          type="submit"
+          class="primary"
+          style="
+            width:100%;
+            margin-top:16px;
+          "
+        >
+          🔐 Login
+        </button>
 
-</div>
+      </form>
+
+
+      <div
+        id="loginMsg"
+        class="message"
+      ></div>
+
+    </div>
+
+  </div>
 
 </section>
 
@@ -387,177 +496,283 @@ Password
      ADMIN PANEL
 ===================================================== -->
 
-<main id="adminPanel" class="hidden">
-
-<div class="container">
-
-
-<!-- HEADER -->
-
-<div class="card">
-
-<div class="topbar">
-
-<div>
-
-<h1>স্মৃতি সংরক্ষণ</h1>
-
-<div class="subtitle">
-Admin Dashboard
-</div>
-
-</div>
-
-<button
-  id="logoutBtn"
-  type="button"
-  class="secondary"
->
-Logout
-</button>
-
-</div>
-
-</div>
-
-
-
-<!-- ADD PROFILE -->
-
-<div class="card">
-
-<h2>➕ নতুন Profile যোগ করুন</h2>
-
-<form id="profileForm">
-
-<label>
-নাম *
-</label>
-
-<input
-  id="name"
-  type="text"
-  placeholder="নাম লিখুন"
-  required
+<main
+  id="adminPanel"
+  class="hidden"
 >
 
-<label>
-পিতা / স্বামীর নাম
-</label>
+  <div class="container">
 
-<input
-  id="father_husband"
-  type="text"
-  placeholder="পিতা / স্বামীর নাম"
->
 
-<label>
-ঠিকানা / গ্রাম
-</label>
+    <!-- HEADER -->
 
-<input
-  id="address"
-  type="text"
-  placeholder="গ্রাম / ঠিকানা"
->
+    <div class="header">
 
-<label>
-বয়স
-</label>
+      <div class="topbar">
 
-<input
-  id="age"
-  type="number"
-  min="0"
-  placeholder="বয়স"
->
+        <div>
 
-<label>
-মৃত্যুর তারিখ
-</label>
+          <h1>
+            স্মৃতি সংরক্ষণ
+          </h1>
 
-<input
-  id="death_date"
-  type="date"
->
+          <div class="subtitle">
+            Admin Dashboard
+          </div>
 
-<label>
-মৃত্যুর কারণ
-</label>
+        </div>
 
-<textarea
-  id="death_reason"
-  placeholder="মৃত্যুর কারণ লিখুন"
-></textarea>
 
-<label>
-ছবি
-</label>
+        <button
+          id="logoutBtn"
+          type="button"
+          class="secondary"
+        >
+          Logout
+        </button>
 
-<input
-  id="photoFile"
-  type="file"
-  accept="image/*"
->
+      </div>
 
-<button
-  type="submit"
-  class="primary"
-  style="width:100%;margin-top:16px;"
->
-💾 Profile সংরক্ষণ করুন
-</button>
-
-</form>
-
-<div id="adminMsg" class="message"></div>
-
-</div>
+    </div>
 
 
 
-<!-- SEARCH -->
+    <!-- =================================================
+         DASHBOARD
+    ================================================= -->
 
-<div class="card">
+    <div class="card">
 
-<h2>🔎 Profile Search</h2>
-
-<div class="search-row">
-
-<input
-  id="adminSearch"
-  type="search"
-  placeholder="নাম দিয়ে খুঁজুন..."
->
-
-<button
-  id="adminSearchBtn"
-  type="button"
-  class="primary"
->
-🔎 Search
-</button>
-
-</div>
-
-</div>
+      <h2>
+        📊 Dashboard
+      </h2>
 
 
+      <div class="stats">
 
-<!-- PROFILE LIST -->
+        <div class="stat">
 
-<div class="card">
+          <span
+            id="dashTotal"
+            class="stat-number"
+          >
+            0
+          </span>
 
-<h2>👥 Profiles</h2>
+          <span class="stat-label">
+            মোট Profile
+          </span>
 
-<div id="adminProfiles">
-Profile লোড হচ্ছে...
-</div>
-
-</div>
+        </div>
 
 
-</div>
+        <div class="stat">
+
+          <span
+            id="dashMonthly"
+            class="stat-number"
+          >
+            0
+          </span>
+
+          <span class="stat-label">
+            এই মাসে যোগ
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ADD PROFILE
+    ================================================= -->
+
+    <div class="card">
+
+      <h2>
+        ➕ নতুন Profile যোগ করুন
+      </h2>
+
+
+      <form id="profileForm">
+
+
+        <label for="name">
+          নাম *
+        </label>
+
+        <input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="নাম লিখুন"
+          required
+        >
+
+
+        <label for="father">
+          পিতা / স্বামীর নাম
+        </label>
+
+        <input
+          id="father"
+          name="father"
+          type="text"
+          placeholder="পিতা / স্বামীর নাম"
+        >
+
+
+        <label for="village">
+          গ্রাম
+        </label>
+
+        <input
+          id="village"
+          name="village"
+          type="text"
+          placeholder="গ্রামের নাম"
+        >
+
+
+        <label for="age">
+          বয়স
+        </label>
+
+        <input
+          id="age"
+          name="age"
+          type="number"
+          min="0"
+          placeholder="বয়স"
+        >
+
+
+        <label for="death_reason">
+          মৃত্যুর কারণ
+        </label>
+
+        <textarea
+          id="death_reason"
+          name="death_reason"
+          placeholder="মৃত্যুর কারণ লিখুন"
+        ></textarea>
+
+
+        <label for="date">
+          মৃত্যুর তারিখ
+        </label>
+
+        <input
+          id="date"
+          name="date"
+          type="date"
+        >
+
+
+        <label for="photoFile">
+          ছবি
+        </label>
+
+        <input
+          id="photoFile"
+          name="photoFile"
+          type="file"
+          accept="image/*"
+        >
+
+
+        <img
+          id="photoPreview"
+          class="photo-preview"
+          alt="Photo preview"
+        >
+
+
+        <button
+          type="submit"
+          class="primary"
+          style="
+            width:100%;
+            margin-top:16px;
+          "
+        >
+          💾 Profile সংরক্ষণ করুন
+        </button>
+
+      </form>
+
+
+      <div
+        id="adminMsg"
+        class="message"
+      ></div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         SEARCH
+    ================================================= -->
+
+    <div class="card">
+
+      <h2>
+        🔎 Profile Search
+      </h2>
+
+
+      <div class="search-row">
+
+        <input
+          id="adminSearch"
+          type="search"
+          placeholder="নাম দিয়ে খুঁজুন..."
+          autocomplete="off"
+        >
+
+
+        <button
+          id="adminSearchBtn"
+          type="button"
+          class="primary"
+        >
+          🔎 Search
+        </button>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         PROFILE LIST
+    ================================================= -->
+
+    <div class="card">
+
+      <h2>
+        👥 Profiles
+      </h2>
+
+
+      <div id="adminProfiles">
+
+        <p>
+          Profile লোড হচ্ছে...
+        </p>
+
+      </div>
+
+    </div>
+
+
+  </div>
 
 </main>
 
@@ -570,828 +785,76 @@ Profile লোড হচ্ছে...
 <script src="config.js"></script>
 
 
+<!-- =====================================================
+     PHOTO PREVIEW
+===================================================== -->
 
 <script>
 
-/* =====================================================
-   SUPABASE
-===================================================== */
-
-let sb = null;
-
-function getSupabase(){
-
-  if(sb){
-    return sb;
-  }
-
-  const url =
-    window.SUPABASE_URL ||
-    window.supabaseUrl ||
-    window.SUPABASE_PROJECT_URL;
-
-  const key =
-    window.SUPABASE_ANON_KEY ||
-    window.supabaseKey ||
-    window.SUPABASE_KEY ||
-    window.SUPABASE_PUBLISHABLE_KEY;
-
-  if(!url || !key){
-
-    throw new Error(
-      "Supabase URL অথবা Key পাওয়া যায়নি। config.js পরীক্ষা করুন।"
+  const photoInput =
+    document.getElementById(
+      "photoFile"
     );
 
-  }
-
-  sb =
-    window.supabase.createClient(
-      url,
-      key
-    );
-
-  return sb;
-}
-
-
-
-/* =====================================================
-   ELEMENTS
-===================================================== */
-
-const loginSection =
-  document.getElementById("loginSection");
-
-const adminPanel =
-  document.getElementById("adminPanel");
-
-const loginForm =
-  document.getElementById("loginForm");
-
-const loginMsg =
-  document.getElementById("loginMsg");
-
-const logoutBtn =
-  document.getElementById("logoutBtn");
-
-const profileForm =
-  document.getElementById("profileForm");
-
-const adminMsg =
-  document.getElementById("adminMsg");
-
-const adminProfiles =
-  document.getElementById("adminProfiles");
-
-const adminSearch =
-  document.getElementById("adminSearch");
-
-const adminSearchBtn =
-  document.getElementById("adminSearchBtn");
-
-
-
-/* =====================================================
-   MESSAGE
-===================================================== */
-
-function showMessage(
-  element,
-  text,
-  type=""
-){
-
-  element.textContent = text;
-
-  element.className =
-    "message " + type;
-
-}
-
-
-
-/* =====================================================
-   LOGIN
-===================================================== */
-
-loginForm.addEventListener(
-  "submit",
-  async function(event){
-
-    event.preventDefault();
-
-    showMessage(
-      loginMsg,
-      "Login হচ্ছে..."
-    );
-
-    try{
-
-      const supabase =
-        getSupabase();
-
-      const email =
-        document
-        .getElementById("email")
-        .value
-        .trim();
-
-      const password =
-        document
-        .getElementById("password")
-        .value;
-
-      const result =
-        await supabase.auth.signInWithPassword({
-
-          email:email,
-
-          password:password
-
-        });
-
-
-      if(result.error){
-
-        throw result.error;
-
-      }
-
-
-      loginSection
-        .classList
-        .add("hidden");
-
-      adminPanel
-        .classList
-        .remove("hidden");
-
-
-      await loadProfiles();
-
-
-    }catch(error){
-
-      console.error(error);
-
-      showMessage(
-        loginMsg,
-        "❌ Login ব্যর্থ: " +
-        error.message,
-        "error"
-      );
-
-    }
-
-  }
-);
-
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-logoutBtn.addEventListener(
-  "click",
-  async function(){
-
-    try{
-
-      const supabase =
-        getSupabase();
-
-      await supabase.auth.signOut();
-
-      adminPanel
-        .classList
-        .add("hidden");
-
-      loginSection
-        .classList
-        .remove("hidden");
-
-    }catch(error){
-
-      console.error(error);
-
-    }
-
-  }
-);
-
-
-
-/* =====================================================
-   SESSION
-===================================================== */
-
-async function checkSession(){
-
-  try{
-
-    const supabase =
-      getSupabase();
-
-    const result =
-      await supabase.auth.getSession();
-
-    if(result.data.session){
-
-      loginSection
-        .classList
-        .add("hidden");
-
-      adminPanel
-        .classList
-        .remove("hidden");
-
-      await loadProfiles();
-
-    }
-
-  }catch(error){
-
-    console.error(error);
-
-    showMessage(
-      loginMsg,
-      error.message,
-      "error"
-    );
-
-  }
-
-}
-
-
-
-/* =====================================================
-   ADD PROFILE
-===================================================== */
-
-profileForm.addEventListener(
-  "submit",
-  async function(event){
-
-    event.preventDefault();
-
-    showMessage(
-      adminMsg,
-      "Profile সংরক্ষণ হচ্ছে..."
+  const photoPreview =
+    document.getElementById(
+      "photoPreview"
     );
 
 
-    try{
+  if (
+    photoInput &&
+    photoPreview
+  ) {
 
-      const supabase =
-        getSupabase();
+    photoInput.addEventListener(
+      "change",
+      function () {
 
-
-      const name =
-        document
-        .getElementById("name")
-        .value
-        .trim();
-
-
-      if(!name){
-
-        throw new Error(
-          "নাম দিতে হবে।"
-        );
-
-      }
+        const file =
+          photoInput.files &&
+          photoInput.files[0];
 
 
-      const father =
-        document
-        .getElementById("father_husband")
-        .value
-        .trim();
+        if (!file) {
 
+          photoPreview.style.display =
+            "none";
 
-      const address =
-        document
-        .getElementById("address")
-        .value
-        .trim();
-
-
-      const ageValue =
-        document
-        .getElementById("age")
-        .value;
-
-
-      const age =
-        ageValue === ""
-          ? null
-          : Number(ageValue);
-
-
-      const deathDate =
-        document
-        .getElementById("death_date")
-        .value ||
-        null;
-
-
-      const deathReason =
-        document
-        .getElementById("death_reason")
-        .value
-        .trim();
-
-
-      const dataToInsert = {
-
-        name:name,
-
-        father_husband:
-          father || null,
-
-        address:
-          address || null,
-
-        age:age,
-
-        death_date:
-          deathDate,
-
-        death_reason:
-          deathReason || null
-
-      };
-
-
-      /*
-      -----------------------------------------------
-      PHOTO
-      -----------------------------------------------
-      */
-
-      const file =
-        document
-        .getElementById("photoFile")
-        .files[0];
-
-
-      if(file){
-
-        try{
-
-          const extension =
-            file.name
-            .split(".")
-            .pop();
-
-
-          const fileName =
-            Date.now() +
-            "_" +
-            Math.random()
-            .toString(36)
-            .substring(2) +
-            "." +
-            extension;
-
-
-          const upload =
-            await supabase
-            .storage
-            .from("photos")
-            .upload(
-              fileName,
-              file,
-              {
-                upsert:false
-              }
-            );
-
-
-          if(!upload.error){
-
-            const publicUrl =
-              supabase
-              .storage
-              .from("photos")
-              .getPublicUrl(fileName);
-
-
-            dataToInsert.photo_url =
-              publicUrl
-              .data
-              .publicUrl;
-
-          }
-
-        }catch(photoError){
-
-          console.warn(
-            "Photo upload সমস্যা:",
-            photoError
+          photoPreview.removeAttribute(
+            "src"
           );
 
+          return;
         }
 
-      }
+
+        const url =
+          URL.createObjectURL(
+            file
+          );
 
 
-      /*
-      -----------------------------------------------
-      INSERT
-      -----------------------------------------------
-      */
+        photoPreview.src = url;
 
-      const result =
-        await supabase
-        .from("profiles")
-        .insert(dataToInsert);
-
-
-      if(result.error){
-
-        throw result.error;
+        photoPreview.style.display =
+          "block";
 
       }
-
-
-      showMessage(
-        adminMsg,
-        "✅ Profile সফলভাবে যোগ হয়েছে।",
-        "success"
-      );
-
-
-      profileForm.reset();
-
-      await loadProfiles();
-
-
-    }catch(error){
-
-      console.error(error);
-
-      showMessage(
-        adminMsg,
-        "❌ " + error.message,
-        "error"
-      );
-
-    }
-
-  }
-);
-
-
-
-/* =====================================================
-   LOAD PROFILES
-===================================================== */
-
-async function loadProfiles(){
-
-  adminProfiles.innerHTML =
-    "<p>Profile লোড হচ্ছে...</p>";
-
-
-  try{
-
-    const supabase =
-      getSupabase();
-
-
-    const result =
-      await supabase
-      .from("profiles")
-      .select("*")
-      .order("id",{
-        ascending:false
-      });
-
-
-    if(result.error){
-
-      throw result.error;
-
-    }
-
-
-    window.allProfiles =
-      result.data || [];
-
-
-    renderProfiles(
-      window.allProfiles
     );
 
-
-  }catch(error){
-
-    console.error(error);
-
-    adminProfiles.innerHTML = `
-      <div class="error">
-        ❌ Profile লোড করা যায়নি।
-        <br><br>
-        ${escapeHtml(error.message)}
-      </div>
-    `;
-
   }
 
-}
+</script>
 
 
 
-/* =====================================================
-   RENDER PROFILES
-===================================================== */
+<!-- =====================================================
+     ADMIN JS
+===================================================== -->
 
-function renderProfiles(list){
+<script src="admin.js"></script>
 
-  if(!list || !list.length){
 
-    adminProfiles.innerHTML =
-      '<div class="empty">কোনো Profile পাওয়া যায়নি।</div>';
-
-    return;
-
-  }
-
-
-  adminProfiles.innerHTML =
-    list.map(function(profile){
-
-      const id =
-        String(profile.id);
-
-
-      const father =
-        profile.father_husband ||
-        profile.father ||
-        "—";
-
-
-      const address =
-        profile.address ||
-        profile.village ||
-        "—";
-
-
-      const age =
-        profile.age == null
-          ? "—"
-          : profile.age + " বছর";
-
-
-      const date =
-        profile.death_date ||
-        "—";
-
-
-      const reason =
-        profile.death_reason ||
-        profile.death_cause ||
-        "";
-
-
-      let photoHTML = "";
-
-      if(profile.photo_url){
-
-        photoHTML = `
-
-          <img
-            class="profile-photo"
-            src="${escapeAttr(profile.photo_url)}"
-            alt=""
-            onerror="this.style.display='none'"
-          >
-
-        `;
-
-      }
-
-
-      return `
-
-        <div class="profile">
-
-          ${photoHTML}
-
-
-          <div class="profile-name">
-            ${escapeHtml(profile.name || "নাম নেই")}
-          </div>
-
-
-          <div class="profile-info">
-
-            পিতা / স্বামী:
-            ${escapeHtml(father)}
-            <br>
-
-            ঠিকানা:
-            ${escapeHtml(address)}
-            <br>
-
-            বয়স:
-            ${escapeHtml(age)}
-            <br>
-
-            মৃত্যুর তারিখ:
-            ${escapeHtml(date)}
-
-            ${
-              reason
-              ?
-              `
-              <br>
-              মৃত্যুর কারণ:
-              ${escapeHtml(reason)}
-              `
-              :
-              ""
-            }
-
-          </div>
-
-
-
-          <!-- =========================================
-               TWO SEPARATE BUTTONS
-          ========================================== -->
-
-          <div class="profile-buttons">
-
-            <button
-              type="button"
-              class="edit-button"
-              data-action="edit"
-              data-id="${escapeAttr(id)}"
-            >
-              ✏️ Edit
-            </button>
-
-
-            <button
-              type="button"
-              class="delete-button"
-              data-action="delete"
-              data-id="${escapeAttr(id)}"
-            >
-              🗑️ Delete
-            </button>
-
-          </div>
-
-
-
-          <!-- =========================================
-               EDIT BOX
-          ========================================== -->
-
-          <div
-            id="editBox-${escapeAttr(id)}"
-            class="edit-box hidden"
-          >
-
-            <div class="edit-title">
-              ✏️ Profile Edit করুন
-            </div>
-
-
-            <label>
-              নাম
-            </label>
-
-            <input
-              id="editName-${escapeAttr(id)}"
-              value="${escapeAttr(profile.name || "")}"
-            >
-
-
-            <label>
-              পিতা / স্বামীর নাম
-            </label>
-
-            <input
-              id="editFather-${escapeAttr(id)}"
-              value="${escapeAttr(father === "—" ? "" : father)}"
-            >
-
-
-            <label>
-              ঠিকানা / গ্রাম
-            </label>
-
-            <input
-              id="editAddress-${escapeAttr(id)}"
-              value="${escapeAttr(address === "—" ? "" : address)}"
-            >
-
-
-            <label>
-              বয়স
-            </label>
-
-            <input
-              id="editAge-${escapeAttr(id)}"
-              type="number"
-              min="0"
-              value="${profile.age == null ? "" : escapeAttr(String(profile.age))}"
-            >
-
-
-            <label>
-              মৃত্যুর তারিখ
-            </label>
-
-            <input
-              id="editDate-${escapeAttr(id)}"
-              type="date"
-              value="${escapeAttr(profile.death_date || "")}"
-            >
-
-
-            <label>
-              মৃত্যুর কারণ
-            </label>
-
-            <textarea
-              id="editReason-${escapeAttr(id)}"
-            >${escapeHtml(reason)}</textarea>
-
-
-
-            <div class="edit-buttons">
-
-              <button
-                type="button"
-                class="primary"
-                data-action="save"
-                data-id="${escapeAttr(id)}"
-              >
-                💾 Save Changes
-              </button>
-
-
-              <button
-                type="button"
-                class="secondary"
-                data-action="cancel"
-                data-id="${escapeAttr(id)}"
-              >
-                Cancel
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("");
-
-
-}
-
-
-
-/* =====================================================
-   BUTTON EVENT HANDLER
-   এখানে একসাথে touch হওয়ার সমস্যা থাকবে না।
-===================================================== */
-
-adminProfiles.addEventListener(
-  "click",
-  function(event){
-
-    const button =
-      event.target.closest("button[data-action]");
-
-
-    if(!button){
-
-      return;
-
-    }
-
-
-    const action =
-      button.dataset.action;
-
-
-    const id =
-      button.dataset.id;
-
-
-    /*
-    Edit
-    */
-
-    if(action ==
+</body>
+</html>
