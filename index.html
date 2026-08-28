@@ -2,43 +2,23 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  >
-  <meta
-    name="theme-color"
-    content="#0757d9"
-  >
-
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0757d9">
   <title>স্মৃতি সংরক্ষণ — Profile Search</title>
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
   <header class="topbar">
-
-    <button
-      class="icon-btn"
-      id="menuBtn"
-      type="button"
-    >
-      ☰
-    </button>
+    <button class="icon-btn" id="menuBtn">☰</button>
 
     <div>
       <h1>স্মৃতি সংরক্ষণ</h1>
-
-      <small>
-        সহজ সার্চ, দ্রুত তথ্য, নিরাপদ সংরক্ষণ
-      </small>
+      <small>সহজ সার্চ, দ্রুত তথ্য, নিরাপদ সংরক্ষণ</small>
     </div>
 
+    <span></span>
   </header>
 
 
@@ -46,20 +26,13 @@
 
     <section class="search-card">
 
-      <div class="search-icon">
-        ⌕
-      </div>
+      <div class="search-icon">⌕</div>
 
-      <h2>
-        প্রোফাইল সার্চ করুন
-      </h2>
+      <h2>প্রোফাইল সার্চ করুন</h2>
 
-      <p>
-        নাম লিখে প্রোফাইল খুঁজুন
-      </p>
+      <p>নাম লিখে প্রোফাইল খুঁজুন</p>
 
       <div class="search-row">
-
         <input
           id="searchInput"
           type="search"
@@ -67,14 +40,9 @@
           autocomplete="off"
         >
 
-        <button
-          id="searchBtn"
-          class="primary"
-          type="button"
-        >
+        <button id="searchBtn" class="primary">
           🔍 সার্চ করুন
         </button>
-
       </div>
 
     </section>
@@ -83,117 +51,72 @@
     <section class="stats-grid">
 
       <div class="stat-card">
+        <span class="stat-title">Last Search</span>
 
-        <span class="stat-title">
-          Last Search
-        </span>
+        <div class="stat-icon">👤</div>
 
-        <div class="stat-icon">
-          👤
-        </div>
-
-        <strong id="lastSearch">
-          —
-        </strong>
+        <strong id="lastSearch">—</strong>
 
         <small id="lastSearchTime">
           এখনও কোনো সার্চ নেই
         </small>
-
       </div>
 
 
       <div class="stat-card">
+        <span class="stat-title">Total Profiles</span>
 
-        <span class="stat-title">
-          Total Profiles
-        </span>
+        <div class="stat-icon">👥</div>
 
-        <div class="stat-icon">
-          👥
-        </div>
-
-        <strong id="totalProfiles">
-          0
-        </strong>
+        <strong id="totalProfiles">0</strong>
 
         <small>
           টি প্রোফাইল আছে
         </small>
-
       </div>
 
 
       <div class="stat-card monthly">
+        <span class="stat-title">এই মাসে যুক্ত</span>
 
-        <span class="stat-title">
-          এই মাসে যুক্ত
-        </span>
+        <div class="stat-icon">📅</div>
 
-        <div class="stat-icon">
-          📅
-        </div>
-
-        <strong id="monthlyProfiles">
-          0
-        </strong>
+        <strong id="monthlyProfiles">0</strong>
 
         <small>
           টি প্রোফাইল এই মাসে যোগ হয়েছে
         </small>
-
       </div>
 
     </section>
 
 
-    <section
-      id="results"
-      class="results hidden"
-    ></section>
+    <section id="results" class="results hidden"></section>
 
   </main>
 
 
   <nav class="bottom-nav">
 
-    <button
-      class="active"
-      type="button"
-    >
+    <button class="active">
       ⌂
-      <span>
-        হোম
-      </span>
+      <span>হোম</span>
     </button>
 
-    <button
-      id="historyBtn"
-      type="button"
-    >
+    <button id="historyBtn">
       ◷
-      <span>
-        সার্চ হিস্টরি
-      </span>
+      <span>সার্চ হিস্টরি</span>
     </button>
 
-    <button
-      id="infoBtn"
-      type="button"
-    >
+    <button id="infoBtn">
       ⓘ
-      <span>
-        তথ্য
-      </span>
+      <span>তথ্য</span>
     </button>
 
   </nav>
 
 
-  <div
-    id="toast"
-    class="toast"
-  ></div>
+  <div id="toast" class="toast"></div>
 
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
