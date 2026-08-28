@@ -1,29 +1,24 @@
 /* =========================================================
-   স্মৃতি সংরক্ষণ - Admin Dashboard
-   Edit / Delete / Add / Search
-   Supabase profiles table
+   স্মৃতি সংরক্ষণ — ADMIN JS
+   Edit + Delete FIXED
    ========================================================= */
 
-const SUPABASE_URL = window.SUPABASE_URL;
-const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+const sb =
+  (window.supabase &&
+   window.SUPABASE_URL &&
+   window.SUPABASE_ANON_KEY &&
+   window.SUPABASE_URL.includes("supabase.co") &&
+   !window.SUPABASE_URL.includes("YOUR-"))
+    ? window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_ANON_KEY
+      )
+    : null;
 
-let sb = null;
 
-if (
-  window.supabase &&
-  SUPABASE_URL &&
-  SUPABASE_ANON_KEY &&
-  SUPABASE_URL.includes("supabase.co") &&
-  !SUPABASE_URL.includes("PASTE_")
-) {
-  sb = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
-}
-
-const TABLE = "profiles";
-const BUCKET = "profile-photos";
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
 
 const loginSection = document.getElementById("loginSection");
 const adminPanel = document.getElementById("adminPanel");
@@ -31,55 +26,30 @@ const adminPanel = document.getElementById("adminPanel");
 const loginForm = document.getElementById("loginForm");
 const loginMsg = document.getElementById("loginMsg");
 
-const profileForm = document.getElementById("profileForm");
-const adminMsg = document.getElementById("adminMsg");
+const form = document.getElementById("profileForm");
+const msg = document.getElementById("adminMsg");
 
 const photoFile = document.getElementById("photoFile");
 
+const adminProfiles = document.getElementById("adminProfiles");
 const adminSearch = document.getElementById("adminSearch");
 const adminSearchBtn = document.getElementById("adminSearchBtn");
-const adminProfiles = document.getElementById("adminProfiles");
 
-const logoutBtn = document.getElementById("logoutBtn");
-
-
-/* =========================================================
-   নিরাপদ HTML
-   ========================================================= */
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, function (char) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[char];
-  });
-}
+let currentProfiles = [];
 
 
 /* =========================================================
-   ID নিরাপদভাবে HTML onclick-এ পাঠানো
-   UUID হলেও কাজ করবে
-   ========================================================= */
-
-function safeId(id) {
-  return JSON.stringify(String(id));
-}
-
-
-/* =========================================================
-   Login Check
+   AUTH
    ========================================================= */
 
 async function refreshAuth() {
 
   if (!sb) {
-    loginSection.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
+    if (loginSection) loginSection.classList.add("hidden");
+    if (adminPanel) adminPanel.classList.remove("hidden");
+
     await loadProfiles();
+    updateDashboardStats();
     return;
   }
 
@@ -87,27 +57,32 @@ async function refreshAuth() {
 
   if (error) {
     console.error(error);
-    loginSection.classList.remove("hidden");
-    adminPanel.classList.add("hidden");
+
+    if (loginSection) loginSection.classList.remove("hidden");
+    if (adminPanel) adminPanel.classList.add("hidden");
+
     return;
   }
 
   if (data && data.session) {
-    loginSection.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
+
+    if (loginSection) loginSection.classList.add("hidden");
+    if (adminPanel) adminPanel.classList.remove("hidden");
 
     await loadProfiles();
-    await updateDashboardStats();
+    updateDashboardStats();
 
   } else {
-    loginSection.classList.remove("hidden");
-    adminPanel.classList.add("hidden");
+
+    if (loginSection) loginSection.classList.remove("hidden");
+    if (adminPanel) adminPanel.classList.add("hidden");
+
   }
 }
 
 
 /* =========================================================
-   Login
+   LOGIN
    ========================================================= */
 
 if (loginForm) {
@@ -116,13 +91,13 @@ if (loginForm) {
 
     e.preventDefault();
 
-    loginMsg.textContent = "লগইন হচ্ছে...";
-
     if (!sb) {
       loginMsg.textContent =
-        "❌ Supabase config পাওয়া যাচ্ছে না";
+        "❌ Supabase config পাওয়া যায়নি";
       return;
     }
+
+    loginMsg.textContent = "লগইন হচ্ছে...";
 
     const email =
       document.getElementById("email").value.trim();
@@ -148,13 +123,18 @@ if (loginForm) {
       "✅ Login সফল";
 
     await refreshAuth();
+
   });
+
 }
 
 
 /* =========================================================
-   Logout
+   LOGOUT
    ========================================================= */
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
 
 if (logoutBtn) {
 
@@ -164,39 +144,41 @@ if (logoutBtn) {
       await sb.auth.signOut();
     }
 
-    loginSection.classList.remove("hidden");
-    adminPanel.classList.add("hidden");
+    await refreshAuth();
+
   });
+
 }
 
 
 /* =========================================================
-   Photo Upload
+   PHOTO UPLOAD
    ========================================================= */
 
 async function uploadPhoto(file) {
 
   if (!file) return null;
 
-  if (file.size > 5 * 1024 * 1024) {
-    throw new Error("ছবির সাইজ ৫ MB-এর মধ্যে রাখুন");
+  if (!sb) {
+    throw new Error("Supabase সংযোগ নেই");
   }
 
-  if (!sb) return null;
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error(
+      "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন"
+    );
+  }
 
   const ext =
     (file.name.split(".").pop() || "jpg")
       .toLowerCase();
 
   const path =
-    "profiles/" +
-    crypto.randomUUID() +
-    "." +
-    ext;
+    `profiles/${crypto.randomUUID()}.${ext}`;
 
   const { error } =
     await sb.storage
-      .from(BUCKET)
+      .from("profile-photos")
       .upload(
         path,
         file,
@@ -210,82 +192,95 @@ async function uploadPhoto(file) {
     throw error;
   }
 
-  const result =
-    sb.storage
-      .from(BUCKET)
-      .getPublicUrl(path);
-
-  return result.data.publicUrl;
+  return sb.storage
+    .from("profile-photos")
+    .getPublicUrl(path)
+    .data
+    .publicUrl;
 }
 
 
 /* =========================================================
-   নতুন Profile যোগ
+   ADD PROFILE
    ========================================================= */
 
-if (profileForm) {
+if (form) {
 
-  profileForm.addEventListener("submit", async function (e) {
+  form.addEventListener("submit", async function (e) {
 
     e.preventDefault();
 
-    adminMsg.textContent =
-      "সংরক্ষণ করা হচ্ছে...";
+    if (msg) {
+      msg.textContent =
+        "সংরক্ষণ করা হচ্ছে...";
+      msg.className = "message";
+    }
 
     try {
 
-      const formData =
-        new FormData(profileForm);
+      const fd =
+        new FormData(form);
 
       const name =
-        String(formData.get("name") || "").trim();
+        String(fd.get("name") || "").trim();
 
       const father =
-        String(formData.get("father") || "").trim();
+        String(fd.get("father") || "").trim();
 
       const village =
-        String(formData.get("village") || "").trim();
+        String(fd.get("village") || "").trim();
 
-      const ageText =
-        String(formData.get("age") || "").trim();
+      const ageValue =
+        String(fd.get("age") || "").trim();
 
-      const death_reason =
-        String(formData.get("death_reason") || "").trim();
+      const deathReason =
+        String(fd.get("death_reason") || "").trim();
 
       const date =
-        String(formData.get("date") || "").trim();
+        String(fd.get("date") || "").trim();
 
       if (!name) {
-        throw new Error("নাম দিতে হবে");
+        throw new Error("নাম লিখুন");
       }
 
-      const age =
-        ageText ? Number(ageText) : null;
-
-      let photo_url = null;
-
-      if (photoFile && photoFile.files[0]) {
-        photo_url =
-          await uploadPhoto(photoFile.files[0]);
-      }
-
-      const record = {
-        name,
-        father,
-        village,
-        age,
-        death_reason,
-        date,
-        photo_url,
-        created_at: new Date().toISOString()
-      };
 
       if (sb) {
 
+        const photo =
+          photoFile &&
+          photoFile.files &&
+          photoFile.files[0]
+            ? await uploadPhoto(
+                photoFile.files[0]
+              )
+            : null;
+
+
+        /*
+          আপনার profiles টেবিলের বিভিন্ন
+          সম্ভাব্য column নাম অনুযায়ী data তৈরি করা হচ্ছে।
+        */
+
+        const insertData = {
+          name: name,
+          father_husband: father || null,
+          address: village || null,
+          age: ageValue
+            ? Number(ageValue)
+            : null,
+          death_reason:
+            deathReason || null,
+          death_date:
+            date || null,
+          photo_url:
+            photo || null
+        };
+
+
         const { error } =
           await sb
-            .from(TABLE)
-            .insert(record);
+            .from("profiles")
+            .insert(insertData);
 
         if (error) {
           throw error;
@@ -293,168 +288,397 @@ if (profileForm) {
 
       } else {
 
-        const old =
+        let arr =
           JSON.parse(
-            localStorage.getItem("demoProfiles") || "[]"
-          );
+            localStorage.getItem(
+              "demoProfiles"
+            ) || "null"
+          ) || [];
 
-        record.id =
-          Date.now().toString();
+        arr.push({
 
-        old.push(record);
+          id: Date.now(),
+
+          name,
+
+          father_husband:
+            father,
+
+          address:
+            village,
+
+          age:
+            ageValue
+              ? Number(ageValue)
+              : null,
+
+          death_reason:
+            deathReason,
+
+          death_date:
+            date,
+
+          photo_url:
+            null,
+
+          created_at:
+            new Date().toISOString()
+
+        });
 
         localStorage.setItem(
           "demoProfiles",
-          JSON.stringify(old)
+          JSON.stringify(arr)
         );
+
       }
 
-      profileForm.reset();
 
-      adminMsg.textContent =
-        "✅ Profile সফলভাবে যোগ হয়েছে";
+      form.reset();
 
-      await loadProfiles();
-      await updateDashboardStats();
+      if (msg) {
+        msg.textContent =
+          "✅ Profile সফলভাবে যোগ হয়েছে";
 
-    } catch (error) {
+        msg.className =
+          "message success";
+      }
 
-      console.error(error);
+      await loadProfiles(
+        adminSearch
+          ? adminSearch.value.trim()
+          : ""
+      );
 
-      adminMsg.textContent =
-        "❌ " + (error.message || error);
+      updateDashboardStats();
+
+
+    } catch (err) {
+
+      console.error(err);
+
+      if (msg) {
+        msg.textContent =
+          "❌ " + (
+            err.message ||
+            "Profile যোগ করা যায়নি"
+          );
+
+        msg.className =
+          "message error";
+      }
+
     }
+
   });
+
 }
 
 
 /* =========================================================
-   Profile Load
+   LOAD PROFILES
    ========================================================= */
 
-async function loadProfiles(searchText = "") {
+async function loadProfiles(q = "") {
 
   try {
 
     if (!sb) {
 
-      let rows =
+      const rows =
         JSON.parse(
-          localStorage.getItem("demoProfiles") || "[]"
-        );
+          localStorage.getItem(
+            "demoProfiles"
+          ) || "null"
+        ) || [];
 
-      if (searchText) {
+      const filtered =
+        q
+          ? rows.filter(p =>
+              String(p.name || "")
+                .toLocaleLowerCase("bn-BD")
+                .includes(
+                  q.toLocaleLowerCase("bn-BD")
+                )
+            )
+          : rows;
 
-        const q =
-          searchText.toLocaleLowerCase("bn-BD");
+      currentProfiles =
+        filtered;
 
-        rows =
-          rows.filter(function (p) {
+      renderAdminProfiles(
+        filtered
+      );
 
-            return String(p.name || "")
-              .toLocaleLowerCase("bn-BD")
-              .includes(q);
-          });
-      }
-
-      renderProfiles(rows);
       return;
     }
 
+
     let query =
       sb
-        .from(TABLE)
+        .from("profiles")
         .select("*")
-        .order("created_at", {
-          ascending: false
-        });
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
 
-    if (searchText) {
+
+    if (q) {
 
       query =
         query.ilike(
           "name",
-          "%" + searchText + "%"
+          `%${q}%`
         );
+
     }
 
-    const { data, error } =
-      await query;
+
+    const {
+      data,
+      error
+    } = await query;
+
 
     if (error) {
       throw error;
     }
 
-    renderProfiles(data || []);
 
-  } catch (error) {
+    currentProfiles =
+      data || [];
 
-    console.error(error);
 
-    adminProfiles.innerHTML =
-      "<p>❌ " +
-      escapeHTML(error.message) +
-      "</p>";
+    renderAdminProfiles(
+      currentProfiles
+    );
+
+
+  } catch (err) {
+
+    console.error(err);
+
+    if (adminProfiles) {
+
+      adminProfiles.innerHTML =
+        `
+        <div style="
+          padding:15px;
+          color:#d7263d;
+          background:#fff0f2;
+          border-radius:12px;
+          line-height:1.7;
+        ">
+          ❌ Profile লোড করা যায়নি<br>
+          ${escapeAdmin(
+            err.message ||
+            "Unknown error"
+          )}
+        </div>
+        `;
+
+    }
+
   }
+
 }
 
 
 /* =========================================================
-   Profile List Render
+   ESCAPE
    ========================================================= */
 
-function renderProfiles(rows) {
+function escapeAdmin(value) {
+
+  return String(value ?? "")
+    .replace(
+      /[&<>"']/g,
+      function (m) {
+
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[m];
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   GET FIELD
+   ========================================================= */
+
+function getField(obj, names) {
+
+  for (const name of names) {
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        obj,
+        name
+      )
+    ) {
+      return obj[name];
+    }
+
+  }
+
+  return "";
+
+}
+
+
+/* =========================================================
+   RENDER PROFILES
+   ========================================================= */
+
+function renderAdminProfiles(rows) {
+
+  if (!adminProfiles) return;
+
 
   if (!rows.length) {
 
     adminProfiles.innerHTML =
-      "<p>কোনো Profile পাওয়া যায়নি।</p>";
+      `
+      <div class="profile-item">
+        <p>
+          কোনো Profile পাওয়া যায়নি।
+        </p>
+      </div>
+      `;
 
     return;
   }
 
+
   adminProfiles.innerHTML =
     rows.map(function (p) {
 
-      const id =
-        safeId(p.id);
+      const father =
+        getField(
+          p,
+          [
+            "father_husband",
+            "father",
+            "spouse"
+          ]
+        );
+
+      const address =
+        getField(
+          p,
+          [
+            "address",
+            "village"
+          ]
+        );
+
+      const age =
+        getField(
+          p,
+          ["age"]
+        );
+
+
+      /*
+        IMPORTANT:
+        এখানে আর onclick="editProfile(...)"
+        বা onclick="deleteProfile(...)"
+        ব্যবহার করা হচ্ছে না।
+
+        UUID থাকলেও data-id নিরাপদে কাজ করবে।
+      */
 
       return `
-        <div class="profile-item">
+        <div
+          class="profile-item"
+          data-profile-id="${escapeAdmin(p.id)}"
+          style="
+            margin-bottom:14px;
+            padding:16px;
+            border:1px solid #e1e5ea;
+            border-radius:14px;
+            background:#fff;
+          "
+        >
 
-          <strong>
-            ${escapeHTML(p.name)}
-          </strong>
+          <div
+            style="
+              font-size:19px;
+              font-weight:800;
+              margin-bottom:5px;
+            "
+          >
+            ${escapeAdmin(p.name || "নাম নেই")}
+          </div>
 
-          <small>
-            ${escapeHTML(p.village || "")}
-            ·
-            ${escapeHTML(p.age || "")}
-            বছর
-          </small>
+
+          <div
+            style="
+              color:#666;
+              line-height:1.7;
+              margin-bottom:12px;
+            "
+          >
+            ${escapeAdmin(address || "")}
+            ${age !== "" ? " · " + escapeAdmin(age) + " বছর" : ""}
+          </div>
+
 
           <div
             style="
               display:flex;
-              gap:8px;
-              margin-top:10px;
-              flex-wrap:wrap;
+              gap:12px;
+              width:100%;
             "
           >
 
             <button
-              class="primary"
               type="button"
-              onclick='editProfile(${id})'
+              class="edit-profile-btn"
+              data-id="${escapeAdmin(p.id)}"
+              style="
+                flex:1;
+                min-height:52px;
+                border:0;
+                border-radius:12px;
+                background:#1261d6;
+                color:white;
+                font-size:17px;
+                font-weight:700;
+                cursor:pointer;
+                touch-action:manipulation;
+              "
             >
               ✏️ Edit
             </button>
 
+
             <button
-              class="primary"
               type="button"
-              style="background:#d7263d"
-              onclick='deleteProfile(${id})'
+              class="delete-profile-btn"
+              data-id="${escapeAdmin(p.id)}"
+              style="
+                flex:1;
+                min-height:52px;
+                border:0;
+                border-radius:12px;
+                background:#d7263d;
+                color:white;
+                font-size:17px;
+                font-weight:700;
+                cursor:pointer;
+                touch-action:manipulation;
+              "
             >
               🗑️ Delete
             </button>
@@ -465,57 +689,196 @@ function renderProfiles(rows) {
       `;
 
     }).join("");
+
+
 }
 
 
 /* =========================================================
-   Edit Profile
+   BUTTON EVENT — EDIT
+   ========================================================= */
+
+if (adminProfiles) {
+
+  adminProfiles.addEventListener(
+    "click",
+    async function (e) {
+
+      const editButton =
+        e.target.closest(
+          ".edit-profile-btn"
+        );
+
+
+      if (editButton) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const id =
+          editButton.dataset.id;
+
+        await editProfile(id);
+
+        return;
+      }
+
+
+      const deleteButton =
+        e.target.closest(
+          ".delete-profile-btn"
+        );
+
+
+      if (deleteButton) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const id =
+          deleteButton.dataset.id;
+
+        await deleteProfile(id);
+
+        return;
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   EDIT PROFILE
    ========================================================= */
 
 async function editProfile(id) {
 
   try {
 
+    if (!id) {
+      alert("Profile ID পাওয়া যায়নি");
+      return;
+    }
+
+
     let p = null;
+
 
     if (sb) {
 
-      const { data, error } =
+      const {
+        data,
+        error
+      } =
         await sb
-          .from(TABLE)
+          .from("profiles")
           .select("*")
           .eq("id", id)
           .maybeSingle();
 
+
       if (error) {
-        throw error;
+        alert(
+          "Profile পাওয়া যায়নি:\n" +
+          error.message
+        );
+        return;
       }
+
 
       p = data;
 
     } else {
 
-      const rows =
+      const arr =
         JSON.parse(
-          localStorage.getItem("demoProfiles") || "[]"
-        );
+          localStorage.getItem(
+            "demoProfiles"
+          ) || "null"
+        ) || [];
+
 
       p =
-        rows.find(function (x) {
-          return String(x.id) === String(id);
-        });
+        arr.find(
+          x =>
+            String(x.id) ===
+            String(id)
+        );
+
     }
 
+
     if (!p) {
-      alert("Profile পাওয়া যায়নি");
+
+      alert(
+        "এই Profile আর পাওয়া যাচ্ছে না।"
+      );
+
       return;
     }
+
+
+    const oldName =
+      getField(
+        p,
+        ["name"]
+      );
+
+
+    const oldFather =
+      getField(
+        p,
+        [
+          "father_husband",
+          "father",
+          "spouse"
+        ]
+      );
+
+
+    const oldAddress =
+      getField(
+        p,
+        [
+          "address",
+          "village"
+        ]
+      );
+
+
+    const oldAge =
+      getField(
+        p,
+        ["age"]
+      );
+
+
+    const oldReason =
+      getField(
+        p,
+        [
+          "death_reason",
+          "death_cause"
+        ]
+      );
+
+
+    const oldDate =
+      getField(
+        p,
+        [
+          "death_date",
+          "date"
+        ]
+      );
 
 
     const name =
       prompt(
         "নাম:",
-        p.name || ""
+        oldName || ""
       );
 
     if (name === null) return;
@@ -523,106 +886,232 @@ async function editProfile(id) {
 
     const father =
       prompt(
-        "পিতা/স্বামীর নাম:",
-        p.father || ""
+        "পিতা / স্বামীর নাম:",
+        oldFather || ""
       );
 
     if (father === null) return;
 
 
-    const village =
+    const address =
       prompt(
-        "গ্রাম:",
-        p.village || ""
+        "গ্রাম / ঠিকানা:",
+        oldAddress || ""
       );
 
-    if (village === null) return;
+    if (address === null) return;
 
 
-    const ageText =
+    const age =
       prompt(
         "বয়স:",
-        p.age ?? ""
+        oldAge ?? ""
       );
 
-    if (ageText === null) return;
+    if (age === null) return;
 
 
-    const death_reason =
+    const reason =
       prompt(
         "মৃত্যুর কারণ:",
-        p.death_reason || ""
+        oldReason || ""
       );
 
-    if (death_reason === null) return;
+    if (reason === null) return;
 
 
     const date =
       prompt(
-        "তারিখ:",
-        p.date || ""
+        "মৃত্যুর তারিখ (YYYY-MM-DD):",
+        oldDate || ""
       );
 
     if (date === null) return;
 
 
-    const updates = {
+    /*
+      শুধুমাত্র যে column সত্যিই
+      profiles row-তে আছে সেটাই update করা হবে।
+    */
 
-      name: name.trim(),
+    const updates = {};
 
-      father: father.trim(),
 
-      village: village.trim(),
+    if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "name"
+      )
+    ) {
+      updates.name =
+        name.trim();
+    }
 
-      age:
-        ageText.trim()
-          ? Number(ageText)
-          : null,
 
-      death_reason:
-        death_reason.trim(),
+    if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "father_husband"
+      )
+    ) {
+      updates.father_husband =
+        father.trim() || null;
 
-      date:
-        date.trim()
-    };
+    } else if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "father"
+      )
+    ) {
+      updates.father =
+        father.trim() || null;
+
+    } else if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "spouse"
+      )
+    ) {
+      updates.spouse =
+        father.trim() || null;
+    }
+
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "address"
+      )
+    ) {
+      updates.address =
+        address.trim() || null;
+
+    } else if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "village"
+      )
+    ) {
+      updates.village =
+        address.trim() || null;
+    }
+
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "age"
+      )
+    ) {
+      updates.age =
+        age.trim()
+          ? Number(age)
+          : null;
+    }
+
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "death_reason"
+      )
+    ) {
+      updates.death_reason =
+        reason.trim() || null;
+
+    } else if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "death_cause"
+      )
+    ) {
+      updates.death_cause =
+        reason.trim() || null;
+    }
+
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "death_date"
+      )
+    ) {
+      updates.death_date =
+        date.trim() || null;
+
+    } else if (
+      Object.prototype.hasOwnProperty.call(
+        p,
+        "date"
+      )
+    ) {
+      updates.date =
+        date.trim() || null;
+    }
 
 
     if (sb) {
 
-      const { error } =
+      const {
+        error
+      } =
         await sb
-          .from(TABLE)
+          .from("profiles")
           .update(updates)
           .eq("id", id);
 
+
       if (error) {
-        throw error;
+
+        alert(
+          "❌ Edit করা যায়নি:\n\n" +
+          error.message
+        );
+
+        return;
       }
+
+
+      alert(
+        "✅ Profile সফলভাবে Edit হয়েছে"
+      );
+
 
     } else {
 
-      let rows =
+      let arr =
         JSON.parse(
-          localStorage.getItem("demoProfiles") || "[]"
+          localStorage.getItem(
+            "demoProfiles"
+          ) || "null"
+        ) || [];
+
+
+      arr =
+        arr.map(
+          x =>
+            String(x.id) ===
+            String(id)
+              ? {
+                  ...x,
+                  ...updates
+                }
+              : x
         );
 
-      rows =
-        rows.map(function (x) {
-
-          return String(x.id) === String(id)
-            ? { ...x, ...updates }
-            : x;
-
-        });
 
       localStorage.setItem(
         "demoProfiles",
-        JSON.stringify(rows)
+        JSON.stringify(arr)
       );
+
+
+      alert(
+        "✅ Profile সফলভাবে Edit হয়েছে"
+      );
+
     }
 
-
-    alert("✅ Profile আপডেট হয়েছে");
 
     await loadProfiles(
       adminSearch
@@ -630,204 +1119,78 @@ async function editProfile(id) {
         : ""
     );
 
-    await updateDashboardStats();
+    updateDashboardStats();
 
-  } catch (error) {
 
-    console.error(error);
+  } catch (err) {
+
+    console.error(err);
 
     alert(
-      "❌ Edit করা যায়নি:\n" +
-      (error.message || error)
+      "❌ Edit করতে সমস্যা হয়েছে:\n\n" +
+      (
+        err.message ||
+        "Unknown error"
+      )
     );
+
   }
+
 }
 
 
 /* =========================================================
-   Delete Profile
+   DELETE PROFILE
    ========================================================= */
 
 async function deleteProfile(id) {
 
-  const ok =
-    confirm(
-      "এই Profile-টি স্থায়ীভাবে Delete করবেন?"
-    );
-
-  if (!ok) return;
-
-
   try {
+
+    if (!id) {
+
+      alert(
+        "Profile ID পাওয়া যায়নি"
+      );
+
+      return;
+    }
+
+
+    const ok =
+      confirm(
+        "এই Profile-টি স্থায়ীভাবে Delete করবেন?"
+      );
+
+
+    if (!ok) return;
+
 
     if (sb) {
 
-      const { error } =
+      const {
+        error
+      } =
         await sb
-          .from(TABLE)
+          .from("profiles")
           .delete()
           .eq("id", id);
 
+
       if (error) {
-        throw error;
-      }
 
-    } else {
-
-      let rows =
-        JSON.parse(
-          localStorage.getItem("demoProfiles") || "[]"
+        alert(
+          "❌ Delete করা যায়নি:\n\n" +
+          error.message
         );
 
-      rows =
-        rows.filter(function (x) {
-
-          return String(x.id) !== String(id);
-
-        });
-
-      localStorage.setItem(
-        "demoProfiles",
-        JSON.stringify(rows)
-      );
-    }
+        return;
+      }
 
 
-    alert("✅ Profile Delete হয়েছে");
-
-
-    await loadProfiles(
-      adminSearch
-        ? adminSearch.value.trim()
-        : ""
-    );
-
-    await updateDashboardStats();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "❌ Delete করা যায়নি:\n" +
-      (error.message || error)
-    );
-  }
-}
-
-
-/* =========================================================
-   Search
-   ========================================================= */
-
-if (adminSearchBtn) {
-
-  adminSearchBtn.addEventListener(
-    "click",
-    function () {
-
-      loadProfiles(
-        adminSearch.value.trim()
+      alert(
+        "✅ Profile Delete হয়েছে"
       );
 
-    }
-  );
-}
 
-
-if (adminSearch) {
-
-  adminSearch.addEventListener(
-    "keydown",
-    function (e) {
-
-      if (e.key === "Enter") {
-
-        loadProfiles(
-          adminSearch.value.trim()
-        );
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   Dashboard Stats
-   ========================================================= */
-
-async function updateDashboardStats() {
-
-  try {
-
-    let rows = [];
-
-    if (sb) {
-
-      const { data, error } =
-        await sb
-          .from(TABLE)
-          .select("created_at");
-
-      if (!error) {
-        rows = data || [];
-      }
-
-    } else {
-
-      rows =
-        JSON.parse(
-          localStorage.getItem("demoProfiles") || "[]"
-        );
-    }
-
-
-    const now =
-      new Date();
-
-    const monthly =
-      rows.filter(function (x) {
-
-        if (!x.created_at) return false;
-
-        const d =
-          new Date(x.created_at);
-
-        return (
-          d.getFullYear() === now.getFullYear() &&
-          d.getMonth() === now.getMonth()
-        );
-
-      }).length;
-
-
-    const totalElement =
-      document.getElementById("dashTotal");
-
-    const monthlyElement =
-      document.getElementById("dashMonthly");
-
-
-    if (totalElement) {
-      totalElement.textContent =
-        rows.length;
-    }
-
-    if (monthlyElement) {
-      monthlyElement.textContent =
-        monthly;
-    }
-
-  } catch (error) {
-
-    console.error(error);
-  }
-}
-
-
-/* =========================================================
-   Start
-   ========================================================= */
-
-refreshAuth();
+    
