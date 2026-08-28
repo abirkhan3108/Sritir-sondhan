@@ -1,1152 +1,456 @@
-/* =========================================================
-   স্মৃতি সংরক্ষণ — ADMIN JS
-   EDIT + DELETE FIXED
-   ========================================================= */
+/* স্মৃতি সংরক্ষণ — Admin Dashboard
+   Edit/Delete fix — keeps the existing app structure
+*/
 
-const SUPABASE_READY =
-  window.supabase &&
+const supabaseLoaded = !!window.supabase;
+const validConfig = !!(
   window.SUPABASE_URL &&
   window.SUPABASE_ANON_KEY &&
   window.SUPABASE_URL.includes("supabase.co") &&
-  !window.SUPABASE_URL.includes("PASTE_");
+  !window.SUPABASE_URL.includes("YOUR-") &&
+  !window.SUPABASE_URL.includes("PASTE_")
+);
 
-const sb = SUPABASE_READY
+const sb = supabaseLoaded && validConfig
   ? window.supabase.createClient(
       window.SUPABASE_URL,
       window.SUPABASE_ANON_KEY
     )
   : null;
 
+const $ = (id) => document.getElementById(id);
 
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
+const loginSection = $("loginSection");
+const adminPanel = $("adminPanel");
+const loginForm = $("loginForm");
+const loginMsg = $("loginMsg");
+const form = $("profileForm");
+const msg = $("adminMsg");
+const photoFile = $("photoFile");
+const profilesBox = $("adminProfiles");
+const searchBox = $("adminSearch");
+const searchBtn = $("adminSearchBtn");
+const logoutBtn = $("logoutBtn");
 
-const loginSection = document.getElementById("loginSection");
-const adminPanel = document.getElementById("adminPanel");
-
-const loginForm = document.getElementById("loginForm");
-const loginMsg = document.getElementById("loginMsg");
-
-const profileForm = document.getElementById("profileForm");
-const adminMsg = document.getElementById("adminMsg");
-
-const photoFile = document.getElementById("photoFile");
-
-const adminProfiles = document.getElementById("adminProfiles");
-const adminSearch = document.getElementById("adminSearch");
-const adminSearchBtn = document.getElementById("adminSearchBtn");
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-
-/* =========================================================
-   HELPERS
-   ========================================================= */
-
-function escapeHTML(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function escapeAdmin(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
 }
 
-
-function showMessage(text, type = "") {
-  if (!adminMsg) return;
-
-  adminMsg.textContent = text;
-
-  adminMsg.className = "message";
-
-  if (type === "error") {
-    adminMsg.classList.add("error");
-  }
-
-  if (type === "success") {
-    adminMsg.classList.add("success");
-  }
+function setLoginMessage(text, error = false) {
+  if (!loginMsg) return;
+  loginMsg.textContent = text;
+  loginMsg.className = error ? "error" : "";
 }
 
+function setAdminMessage(text, error = false) {
+  if (!msg) return;
+  msg.textContent = text;
+  msg.className = error ? "error" : "success";
+}
 
-/* =========================================================
-   AUTH
-   ========================================================= */
+function showAdmin() {
+  loginSection?.classList.add("hidden");
+  adminPanel?.classList.remove("hidden");
+}
+
+function showLogin() {
+  loginSection?.classList.remove("hidden");
+  adminPanel?.classList.add("hidden");
+}
 
 async function refreshAuth() {
-
   if (!sb) {
-
-    loginSection?.classList.add("hidden");
-    adminPanel?.classList.remove("hidden");
-
+    showLogin();
+    setLoginMessage("Supabase config ঠিক নেই।");
     return;
   }
 
   try {
+    const { data, error } = await sb.auth.getSession();
+    if (error) throw error;
 
-    const result = await sb.auth.getSession();
-
-    const session = result?.data?.session;
-
-    if (session) {
-
-      loginSection?.classList.add("hidden");
-      adminPanel?.classList.remove("hidden");
-
-      await loadProfiles();
-
+    if (data?.session) {
+      showAdmin();
+      await loadProfiles(searchBox?.value.trim() || "");
     } else {
-
-      loginSection?.classList.remove("hidden");
-      adminPanel?.classList.add("hidden");
-
+      showLogin();
     }
-
-  } catch (error) {
-
-    console.error(error);
-
-    loginSection?.classList.remove("hidden");
-    adminPanel?.classList.add("hidden");
-
+  } catch (err) {
+    console.error("Auth error:", err);
+    showLogin();
+    setLoginMessage("❌ " + err.message, true);
   }
 }
 
-
-/* =========================================================
-   LOGIN
-   ========================================================= */
-
 if (loginForm) {
-
-  loginForm.addEventListener("submit", async function (e) {
-
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     if (!sb) {
-
-      loginMsg.textContent =
-        "❌ Supabase config.js সঠিকভাবে সেট করা নেই।";
-
+      setLoginMessage("❌ Supabase config.js সঠিক নেই।", true);
       return;
     }
 
-    loginMsg.textContent = "Login হচ্ছে...";
-
-    const email =
-      document.getElementById("email")?.value.trim();
-
-    const password =
-      document.getElementById("password")?.value;
+    setLoginMessage("Login হচ্ছে...");
 
     try {
+      const email = $("email")?.value.trim();
+      const password = $("password")?.value;
 
-      const { error } =
-        await sb.auth.signInWithPassword({
-          email,
-          password
-        });
+      const { error } = await sb.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      if (error) {
+      if (error) throw error;
 
-        loginMsg.textContent =
-          "❌ " + error.message;
-
-        return;
-      }
-
-      loginMsg.textContent = "✅ Login সফল";
-
+      setLoginMessage("✅ Login সফল");
       await refreshAuth();
-
-    } catch (error) {
-
-      loginMsg.textContent =
-        "❌ " + error.message;
-
+    } catch (err) {
+      console.error(err);
+      setLoginMessage("❌ " + err.message, true);
     }
-
   });
-
 }
-
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
 
 if (logoutBtn) {
-
-  logoutBtn.addEventListener("click", async function () {
-
-    if (sb) {
-      await sb.auth.signOut();
-    }
-
-    await refreshAuth();
-
+  logoutBtn.addEventListener("click", async () => {
+    if (!sb) return;
+    await sb.auth.signOut();
+    showLogin();
   });
-
 }
-
-
-/* =========================================================
-   PHOTO UPLOAD
-   ========================================================= */
 
 async function uploadPhoto(file) {
-
-  if (!file) {
-    return null;
-  }
-
-  if (!sb) {
-    return null;
-  }
+  if (!file) return null;
+  if (!sb) return null;
 
   if (file.size > 5 * 1024 * 1024) {
-
-    throw new Error(
-      "ছবির সাইজ ৫ MB-এর মধ্যে রাখুন।"
-    );
-
+    throw new Error("ছবির সাইজ ৫ MB-এর মধ্যে রাখুন");
   }
 
-  const extension =
-    (file.name.split(".").pop() || "jpg")
-      .toLowerCase();
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `profiles/${crypto.randomUUID()}.${ext}`;
 
-  const path =
-    "profiles/" +
-    crypto.randomUUID() +
-    "." +
-    extension;
+  const { error } = await sb.storage
+    .from("profile-photos")
+    .upload(path, file, {
+      upsert: false,
+      contentType: file.type || "image/jpeg"
+    });
 
-  const { error } =
-    await sb.storage
-      .from("profile-photos")
-      .upload(
-        path,
-        file,
-        {
-          upsert: false,
-          contentType: file.type
-        }
-      );
+  if (error) throw error;
 
-  if (error) {
-    throw error;
-  }
-
-  const publicURL =
-    sb.storage
-      .from("profile-photos")
-      .getPublicUrl(path);
-
-  return publicURL?.data?.publicUrl || null;
+  return sb.storage
+    .from("profile-photos")
+    .getPublicUrl(path).data.publicUrl;
 }
 
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setAdminMessage("সংরক্ষণ করা হচ্ছে...");
 
-/* =========================================================
-   ADD PROFILE
-   ========================================================= */
+    try {
+      const x = Object.fromEntries(new FormData(form).entries());
+      delete x.photoFile;
 
-if (profileForm) {
+      x.name = String(x.name || "").trim();
+      x.father = String(x.father || "").trim();
+      x.village = String(x.village || "").trim();
+      x.death_reason = String(x.death_reason || "").trim();
+      x.age = String(x.age || "").trim() === "" ? null : Number(x.age);
+      x.date = String(x.date || "").trim() || null;
 
-  profileForm.addEventListener(
-    "submit",
-    async function (e) {
+      if (!x.name) throw new Error("নাম দিতে হবে");
 
-      e.preventDefault();
+      if (sb) {
+        const file = photoFile?.files?.[0];
+        x.photo_url = await uploadPhoto(file);
 
-      showMessage("সংরক্ষণ করা হচ্ছে...");
+        const { error } = await sb
+          .from("profiles")
+          .insert(x);
 
-      try {
-
-        const formData =
-          new FormData(profileForm);
-
-        const name =
-          String(formData.get("name") || "").trim();
-
-        const father =
-          String(formData.get("father") || "").trim();
-
-        const village =
-          String(formData.get("village") || "").trim();
-
-        const ageValue =
-          String(formData.get("age") || "").trim();
-
-        const death_reason =
-          String(
-            formData.get("death_reason") || ""
-          ).trim();
-
-        const date =
-          String(formData.get("date") || "").trim();
-
-        if (!name) {
-
-          showMessage(
-            "❌ নাম দিতে হবে।",
-            "error"
-          );
-
-          return;
-        }
-
-        const age =
-          ageValue === ""
-            ? null
-            : Number(ageValue);
-
-        let photo_url = null;
-
-        if (
-          photoFile &&
-          photoFile.files &&
-          photoFile.files[0]
-        ) {
-
-          photo_url =
-            await uploadPhoto(
-              photoFile.files[0]
-            );
-
-        }
-
-
-        /* -----------------------------------------
-           SUPABASE
-           ----------------------------------------- */
-
-        if (sb) {
-
-          const { error } =
-            await sb
-              .from("profiles")
-              .insert({
-
-                name,
-                father,
-                village,
-                age,
-                death_reason,
-                date: date || null,
-                photo_url,
-                created_at:
-                  new Date().toISOString()
-
-              });
-
-          if (error) {
-            throw error;
-          }
-
-        }
-
-
-        /* -----------------------------------------
-           DEMO MODE
-           ----------------------------------------- */
-
-        else {
-
-          const oldData =
-            JSON.parse(
-              localStorage.getItem(
-                "demoProfiles"
-              ) || "[]"
-            );
-
-          oldData.push({
-
-            id: crypto.randomUUID(),
-
-            name,
-            father,
-            village,
-            age,
-            death_reason,
-            date: date || null,
-            photo_url: null,
-
-            created_at:
-              new Date().toISOString()
-
-          });
-
-          localStorage.setItem(
-            "demoProfiles",
-            JSON.stringify(oldData)
-          );
-
-        }
-
-
-        profileForm.reset();
-
-        showMessage(
-          "✅ Profile সফলভাবে যোগ হয়েছে।",
-          "success"
-        );
-
-        await loadProfiles();
-
-      } catch (error) {
-
-        console.error(error);
-
-        showMessage(
-          "❌ " + error.message,
-          "error"
-        );
-
+        if (error) throw error;
+      } else {
+        const rows = JSON.parse(localStorage.getItem("demoProfiles") || "[]");
+        rows.push({
+          ...x,
+          id: Date.now(),
+          photo_url: null,
+          created_at: new Date().toISOString()
+        });
+        localStorage.setItem("demoProfiles", JSON.stringify(rows));
       }
 
+      form.reset();
+      setAdminMessage("✅ Profile সফলভাবে যোগ হয়েছে");
+      await loadProfiles(searchBox?.value.trim() || "");
+    } catch (err) {
+      console.error(err);
+      setAdminMessage("❌ " + err.message, true);
     }
-  );
-
+  });
 }
 
+async function loadProfiles(q = "") {
+  if (!profilesBox) return;
 
-/* =========================================================
-   LOAD PROFILES
-   ========================================================= */
+  profilesBox.innerHTML = "<p>Profile লোড হচ্ছে...</p>";
 
-async function loadProfiles(searchText = "") {
+  try {
+    let rows = [];
 
-  if (!adminProfiles) return;
-
-
-  /* -----------------------------------------
-     SUPABASE
-     ----------------------------------------- */
-
-  if (sb) {
-
-    let query =
-      sb
+    if (sb) {
+      let query = sb
         .from("profiles")
         .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
+        .order("created_at", { ascending: false });
+
+      if (q) query = query.ilike("name", `%${q}%`);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      rows = data || [];
+    } else {
+      rows = JSON.parse(localStorage.getItem("demoProfiles") || "[]");
+      if (q) {
+        rows = rows.filter((p) =>
+          String(p.name || "").toLowerCase().includes(q.toLowerCase())
         );
-
-
-    if (searchText) {
-
-      query =
-        query.ilike(
-          "name",
-          "%" + searchText + "%"
-        );
-
+      }
     }
 
-
-    const { data, error } =
-      await query;
-
-
-    if (error) {
-
-      console.error(error);
-
-      adminProfiles.innerHTML =
-        `<p class="error">
-          ❌ ${escapeHTML(error.message)}
-        </p>`;
-
-      return;
-    }
-
-
-    renderProfiles(data || []);
-
-    updateDashboardStats(
-      data || []
-    );
-
-    return;
-
+    renderAdminProfiles(rows);
+    updateDashboardStats(rows);
+  } catch (err) {
+    console.error(err);
+    profilesBox.innerHTML = `<p class="error">❌ ${escapeAdmin(err.message)}</p>`;
   }
-
-
-  /* -----------------------------------------
-     LOCAL STORAGE
-     ----------------------------------------- */
-
-  let rows =
-    JSON.parse(
-      localStorage.getItem(
-        "demoProfiles"
-      ) || "[]"
-    );
-
-
-  if (searchText) {
-
-    rows =
-      rows.filter(
-        p =>
-          String(
-            p.name || ""
-          )
-            .toLowerCase()
-            .includes(
-              searchText.toLowerCase()
-            )
-      );
-
-  }
-
-
-  renderProfiles(rows);
-
-  updateDashboardStats(rows);
-
 }
 
-
-/* =========================================================
-   RENDER PROFILES
-   ========================================================= */
-
-function renderProfiles(rows) {
-
-  if (!adminProfiles) return;
-
+function renderAdminProfiles(rows) {
+  if (!profilesBox) return;
 
   if (!rows.length) {
-
-    adminProfiles.innerHTML =
-      "<p>কোনো Profile পাওয়া যায়নি।</p>";
-
+    profilesBox.innerHTML = "<p>কোনো Profile পাওয়া যায়নি।</p>";
     return;
-
   }
 
+  profilesBox.innerHTML = rows.map((p) => {
+    const id = String(p.id ?? "");
+    const age = p.age === null || p.age === undefined || p.age === ""
+      ? ""
+      : ` · ${escapeAdmin(p.age)} বছর`;
 
-  adminProfiles.innerHTML =
-    rows.map(function (p) {
-
-      const id =
-        String(p.id || "");
-
-
-      return `
-
-        <div
-          class="profile-item"
-          style="
-            margin-bottom:16px;
-            padding:16px;
-            border-radius:14px;
-          "
-        >
-
-          <div class="profile-name">
-            ${escapeHTML(p.name || "নাম নেই")}
-          </div>
-
-          <div class="profile-info">
-
-            ${escapeHTML(
-              p.village || ""
-            )}
-
-            ${p.age !== null &&
-              p.age !== undefined &&
-              p.age !== ""
-              ? " · " +
-                escapeHTML(p.age) +
-                " বছর"
-              : ""}
-
-          </div>
-
-
-          <div
-            class="profile-actions"
-            style="
-              display:flex;
-              gap:12px;
-              margin-top:14px;
-            "
-          >
-
-            <button
-              type="button"
-              class="primary edit-profile-btn"
-              data-id="${escapeHTML(id)}"
-              style="
-                min-width:120px;
-                padding:14px 18px;
-                touch-action:manipulation;
-              "
-            >
-              ✏️ Edit
-            </button>
-
-
-            <button
-              type="button"
-              class="danger delete-profile-btn"
-              data-id="${escapeHTML(id)}"
-              style="
-                min-width:120px;
-                padding:14px 18px;
-                touch-action:manipulation;
-              "
-            >
-              🗑️ Delete
-            </button>
-
-          </div>
-
+    return `
+      <div class="profile-item" data-profile-id="${escapeAdmin(id)}">
+        <strong>${escapeAdmin(p.name)}</strong>
+        <small>${escapeAdmin(p.village || "")}${age}</small>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button
+            type="button"
+            class="primary admin-edit-btn"
+            data-id="${escapeAdmin(id)}"
+          >✏️ Edit</button>
+          <button
+            type="button"
+            class="primary admin-delete-btn"
+            style="background:#d7263d"
+            data-id="${escapeAdmin(id)}"
+          >🗑️ Delete</button>
         </div>
-
-      `;
-
-    }).join("");
-
+      </div>
+    `;
+  }).join("");
 }
 
-
-/* =========================================================
-   BUTTON EVENT DELEGATION
-   ========================================================= */
-
-if (adminProfiles) {
-
-  adminProfiles.addEventListener(
-    "click",
-    async function (e) {
-
-      const editButton =
-        e.target.closest(
-          ".edit-profile-btn"
-        );
-
-      const deleteButton =
-        e.target.closest(
-          ".delete-profile-btn"
-        );
-
-
-      /* -----------------------------------------
-         EDIT
-         ----------------------------------------- */
-
-      if (editButton) {
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        const id =
-          editButton.dataset.id;
-
-        if (!id) return;
-
-        await editProfile(id);
-
-        return;
-      }
-
-
-      /* -----------------------------------------
-         DELETE
-         ----------------------------------------- */
-
-      if (deleteButton) {
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        const id =
-          deleteButton.dataset.id;
-
-        if (!id) return;
-
-        await deleteProfile(id);
-
-        return;
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   EDIT PROFILE
-   ========================================================= */
-
-async function editProfile(id) {
-
-  try {
-
-    let profile = null;
-
-
-    /* -----------------------------------------
-       GET PROFILE
-       ----------------------------------------- */
-
-    if (sb) {
-
-      const { data, error } =
-        await sb
-          .from("profiles")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
-
-
-      if (error) {
-        throw error;
-      }
-
-      profile = data;
-
-    } else {
-
-      const rows =
-        JSON.parse(
-          localStorage.getItem(
-            "demoProfiles"
-          ) || "[]"
-        );
-
-      profile =
-        rows.find(
-          p =>
-            String(p.id) ===
-            String(id)
-        );
-
-    }
-
-
-    if (!profile) {
-
-      alert(
-        "❌ Profile পাওয়া যায়নি।"
-      );
-
-      return;
-    }
-
-
-    /* -----------------------------------------
-       EDIT FORM
-       ----------------------------------------- */
-
-    const name =
-      prompt(
-        "নাম:",
-        profile.name || ""
-      );
-
-    if (name === null) return;
-
-
-    const father =
-      prompt(
-        "পিতা/স্বামীর নাম:",
-        profile.father || ""
-      );
-
-    if (father === null) return;
-
-
-    const village =
-      prompt(
-        "গ্রাম:",
-        profile.village || ""
-      );
-
-    if (village === null) return;
-
-
-    const age =
-      prompt(
-        "বয়স:",
-        profile.age ?? ""
-      );
-
-    if (age === null) return;
-
-
-    const death_reason =
-      prompt(
-        "মৃত্যুর কারণ:",
-        profile.death_reason || ""
-      );
-
-    if (death_reason === null) return;
-
-
-    const date =
-      prompt(
-        "মৃত্যুর তারিখ (YYYY-MM-DD):",
-        profile.date || ""
-      );
-
-    if (date === null) return;
-
-
-    const updates = {
-
-      name: name.trim(),
-
-      father: father.trim(),
-
-      village: village.trim(),
-
-      age:
-        age.trim() === ""
-          ? null
-          : Number(age),
-
-      death_reason:
-        death_reason.trim(),
-
-      date:
-        date.trim() === ""
-          ? null
-          : date.trim()
-
-    };
-
-
-    if (!updates.name) {
-
-      alert(
-        "❌ নাম খালি রাখা যাবে না।"
-      );
-
-      return;
-    }
-
-
-    /* -----------------------------------------
-       SUPABASE UPDATE
-       ----------------------------------------- */
-
-    if (sb) {
-
-      const { data, error } =
-        await sb
-          .from("profiles")
-          .update(updates)
-          .eq("id", id)
-          .select()
-          .single();
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      if (!data) {
-
-        throw new Error(
-          "Profile Update হয়নি। RLS policy পরীক্ষা করুন।"
-        );
-
-      }
-
-    }
-
-
-    /* -----------------------------------------
-       LOCAL UPDATE
-       ----------------------------------------- */
-
-    else {
-
-      const rows =
-        JSON.parse(
-          localStorage.getItem(
-            "demoProfiles"
-          ) || "[]"
-        );
-
-
-      const newRows =
-        rows.map(function (p) {
-
-          if (
-            String(p.id) ===
-            String(id)
-          ) {
-
-            return {
-              ...p,
-              ...updates
-            };
-
-          }
-
-          return p;
-
-        });
-
-
-      localStorage.setItem(
-        "demoProfiles",
-        JSON.stringify(newRows)
-      );
-
-    }
-
-
-    alert(
-      "✅ Profile সফলভাবে Edit হয়েছে।"
-    );
-
-
-    await loadProfiles(
-      adminSearch?.value.trim() || ""
-    );
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "❌ Edit করা যায়নি:\n" +
-      error.message
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   DELETE PROFILE
-   ========================================================= */
-
-async function deleteProfile(id) {
-
-  const ok =
-    confirm(
-      "⚠️ এই Profile-টি স্থায়ীভাবে Delete করবেন?"
-    );
-
-  if (!ok) {
-    return;
-  }
-
-
-  try {
-
-
-    /* -----------------------------------------
-       SUPABASE
-       ----------------------------------------- */
-
-    if (sb) {
-
-      const { data, error } =
-        await sb
-          .from("profiles")
-          .delete()
-          .eq("id", id)
-          .select("id");
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      if (!data || data.length === 0) {
-
-        throw new Error(
-          "Delete হয়নি। Supabase RLS policy অথবা Login session পরীক্ষা করুন।"
-        );
-
-      }
-
-    }
-
-
-    /* -----------------------------------------
-       LOCAL STORAGE
-       ----------------------------------------- */
-
-    else {
-
-      const rows =
-        JSON.parse(
-          localStorage.getItem(
-            "demoProfiles"
-          ) || "[]"
-        );
-
-
-      const newRows =
-        rows.filter(
-          p =>
-            String(p.id) !==
-            String(id)
-        );
-
-
-      localStorage.setItem(
-        "demoProfiles",
-        JSON.stringify(newRows)
-      );
-
-    }
-
-
-    alert(
-      "✅ Profile Delete হয়েছে।"
-    );
-
-
-    await loadProfiles(
-      adminSearch?.value.trim() || ""
-    );
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "❌ Delete করা যায়নি:\n" +
-      error.message
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SEARCH
-   ========================================================= */
-
-if (adminSearchBtn) {
-
-  adminSearchBtn.type = "button";
-
-  adminSearchBtn.addEventListener(
-    "click",
-    function (e) {
-
+/*
+  IMPORTANT:
+  No inline onclick is used.
+  Event delegation keeps Edit and Delete completely separate.
+*/
+if (profilesBox) {
+  profilesBox.addEventListener("click", async (e) => {
+    const editBtn = e.target.closest(".admin-edit-btn");
+    if (editBtn) {
       e.preventDefault();
       e.stopPropagation();
+      await editProfile(editBtn.dataset.id);
+      return;
+    }
 
-      loadProfiles(
-        adminSearch?.value.trim() || ""
+    const deleteBtn = e.target.closest(".admin-delete-btn");
+    if (deleteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      await deleteProfile(deleteBtn.dataset.id);
+    }
+  });
+}
+
+async function getProfileById(id) {
+  if (sb) {
+    const { data, error } = await sb
+      .from("profiles")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  const rows = JSON.parse(localStorage.getItem("demoProfiles") || "[]");
+  return rows.find((p) => String(p.id) === String(id)) || null;
+}
+
+async function editProfile(id) {
+  try {
+    const p = await getProfileById(id);
+
+    if (!p) {
+      alert("❌ Profile পাওয়া যায়নি।");
+      return;
+    }
+
+    const name = prompt("নাম:", p.name || "");
+    if (name === null) return;
+
+    const father = prompt("পিতা/স্বামীর নাম:", p.father || "");
+    if (father === null) return;
+
+    const village = prompt("গ্রাম:", p.village || "");
+    if (village === null) return;
+
+    const age = prompt("বয়স:", p.age ?? "");
+    if (age === null) return;
+
+    const death_reason = prompt("মৃত্যুর কারণ:", p.death_reason || "");
+    if (death_reason === null) return;
+
+    const date = prompt("তারিখ (YYYY-MM-DD):", p.date || p.death_date || "");
+    if (date === null) return;
+
+    const updates = {
+      name: name.trim(),
+      father: father.trim(),
+      village: village.trim(),
+      age: age.trim() === "" ? null : Number(age),
+      death_reason: death_reason.trim(),
+      date: date.trim() || null
+    };
+
+    if (!updates.name) {
+      alert("❌ নাম খালি রাখা যাবে না।");
+      return;
+    }
+
+    if (sb) {
+      const { error } = await sb
+        .from("profiles")
+        .update(updates)
+        .eq("id", id);
+
+      if (error) throw error;
+    } else {
+      let rows = JSON.parse(localStorage.getItem("demoProfiles") || "[]");
+      rows = rows.map((row) =>
+        String(row.id) === String(id)
+          ? { ...row, ...updates }
+          : row
       );
-
+      localStorage.setItem("demoProfiles", JSON.stringify(rows));
     }
-  );
 
+    alert("✅ Profile সফলভাবে Edit হয়েছে।");
+    await loadProfiles(searchBox?.value.trim() || "");
+  } catch (err) {
+    console.error(err);
+    alert("❌ Edit করা যায়নি:\n" + err.message);
+  }
 }
 
+async function deleteProfile(id) {
+  if (!id) {
+    alert("❌ Profile ID পাওয়া যায়নি।");
+    return;
+  }
 
-if (adminSearch) {
+  if (!confirm("এই Profile-টি স্থায়ীভাবে Delete করবেন?")) return;
 
-  adminSearch.addEventListener(
-    "keydown",
-    function (e) {
+  try {
+    if (sb) {
+      const { data, error } = await sb
+        .from("profiles")
+        .delete()
+        .eq("id", id)
+        .select("id");
 
-      if (e.key === "Enter") {
+      if (error) throw error;
 
-        e.preventDefault();
-
-        loadProfiles(
-          adminSearch.value.trim()
+      if (!data || data.length === 0) {
+        throw new Error(
+          "Delete হয়নি। Supabase RLS policy বা Admin login পরীক্ষা করুন।"
         );
-
       }
-
+    } else {
+      let rows = JSON.parse(localStorage.getItem("demoProfiles") || "[]");
+      rows = rows.filter((row) => String(row.id) !== String(id));
+      localStorage.setItem("demoProfiles", JSON.stringify(rows));
     }
-  );
 
+    alert("✅ Profile Delete হয়েছে।");
+    await loadProfiles(searchBox?.value.trim() || "");
+  } catch (err) {
+    console.error(err);
+    alert("❌ Delete করা যায়নি:\n" + err.message);
+  }
 }
 
+if (searchBtn) {
+  searchBtn.type = "button";
+  searchBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    loadProfiles(searchBox?.value.trim() || "");
+  });
+}
 
-/* =========================================================
-   DASHBOARD STATS
-   ========================================================= */
+if (searchBox) {
+  searchBox.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      loadProfiles(searchBox.value.trim());
+    }
+  });
+}
 
 function updateDashboardStats(rows) {
+  const total = $("dashTotal");
+  const monthly = $("dashMonthly");
 
-  const total =
-    document.getElementById(
-      "dashTotal"
-    );
-
-  const monthly =
-    document.getElementById(
-      "dashMonthly"
-    );
-
-
-  if (total) {
-
-    total.textContent =
-      rows.length;
-
-  }
-
+  if (total) total.textContent = rows.length;
 
   if (monthly) {
-
     const now = new Date();
+    const count = rows.filter((p) => {
+      if (!p.created_at) return false;
+      const d = new Date(p.created_at);
+      return d.getFullYear() === now.getFullYear() &&
+             d.getMonth() === now.getMonth();
+    }).length;
 
-    const count =
-      rows.filter(function (p) {
-
-        if (!p.created_at) {
-          return false;
-        }
-
-        const date =
-          new Date(
-            p.created_at
-          );
-
-        return (
-          date.getFullYear() ===
-            now.getFullYear() &&
-          date.getMonth() ===
-            now.getMonth()
-        );
-
-      }).length;
-
-
-    monthly.textContent =
-      count;
-
+    monthly.textContent = count;
   }
-
 }
 
-
-/* =========================================================
-   START
-   ========================================================= */
-
+/* Start */
 refreshAuth();

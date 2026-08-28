@@ -1,185 +1,63 @@
 <!doctype html>
 <html lang="bn">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="স্মৃতি — প্রিয়জনদের জীবন, ছবি ও স্মরণীয় তথ্য ভালোবাসায় সংরক্ষণের একটি স্মারক ওয়েবসাইট।">
-<title>স্মৃতি — আমাদের স্মৃতিতে</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root{--ink:#171b3a;--muted:#69708c;--primary:#4c22a8;--primary2:#6c3fe0;--soft:#f5f2ff;--paper:#fff;--line:#e7e3f2;--navy:#111a45;--rose:#fff0f5;--shadow:0 16px 45px rgba(35,25,80,.10)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);font-family:"Noto Sans Bengali",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#fbfaff}a{text-decoration:none;color:inherit}button,input{font:inherit}
-.container{width:min(1160px,calc(100% - 32px));margin:auto}.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.nav{height:70px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:10px;font-size:24px;font-weight:900;color:#2c2169}.brandmark{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,#efe8ff,#fff);display:grid;place-items:center;color:var(--primary);font-size:25px}.links{display:flex;align-items:center;gap:8px}.links a{padding:10px 13px;border-radius:11px;color:#4b4f68;font-weight:700;font-size:14px}.links a:hover{background:var(--soft);color:var(--primary)}.admin{background:var(--primary)!important;color:#fff!important;box-shadow:0 8px 18px rgba(76,34,168,.2)}
-.hero{position:relative;overflow:hidden;background:radial-gradient(circle at 80% 20%,#8b64e9 0,#4a219d 34%,#12153e 76%);color:#fff}.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;filter:blur(2px);opacity:.22}.hero:before{width:360px;height:360px;background:#b998ff;right:-100px;top:-140px}.hero:after{width:240px;height:240px;background:#ff86b7;left:-100px;bottom:-150px}.hero-inner{position:relative;z-index:1;min-height:405px;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:30px;padding:58px 0}.eyebrow{display:inline-flex;align-items:center;gap:7px;background:#ffffff18;border:1px solid #ffffff2e;padding:7px 12px;border-radius:999px;font-size:13px;margin-bottom:18px}.hero h1{font-size:clamp(36px,5.3vw,62px);line-height:1.12;margin:0 0 15px;letter-spacing:-1px}.hero h1 span{color:#f2dfff}.hero p{font-size:17px;line-height:1.85;color:#e5e4f3;max-width:650px;margin:0 0 25px}.search{max-width:650px;display:flex;background:#fff;border-radius:15px;padding:6px;box-shadow:0 18px 45px rgba(0,0,0,.22)}.search input{flex:1;border:0;outline:0;padding:13px 15px;min-width:0;color:var(--ink);font-size:16px}.search button{border:0;border-radius:11px;background:var(--primary);color:#fff;padding:0 22px;font-weight:900;cursor:pointer}.hero-art{min-height:280px;display:grid;place-items:center}.lantern{width:235px;height:235px;border-radius:50%;background:radial-gradient(circle,#ffd9e8 0,#8f59db 35%,#26145e 72%);box-shadow:0 0 100px #c48cff66;display:grid;place-items:center;position:relative}.lantern:before{content:"";width:110px;height:140px;border-radius:38% 38% 45% 45%;border:5px solid #ffdcb8;background:linear-gradient(#fff0a8,#f5a64e);box-shadow:0 0 40px #ffd77c}.lantern:after{content:"🕯️";position:absolute;font-size:54px;filter:drop-shadow(0 0 12px #fff)}
-.stats{margin-top:-42px;position:relative;z-index:5}.statbox{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);display:grid;grid-template-columns:repeat(4,1fr);overflow:hidden}.stat{padding:22px 20px;display:flex;align-items:center;gap:13px;border-right:1px solid var(--line)}.stat:last-child{border-right:0}.icon{width:44px;height:44px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:22px}.stat b{display:block;font-size:24px}.stat small{color:var(--muted);font-weight:700}
-main{padding:60px 0}.section{margin-bottom:58px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:18px}.section-head h2{margin:0;font-size:28px}.section-head p{margin:4px 0 0;color:var(--muted)}.seeall{color:var(--primary);font-weight:900;font-size:14px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 25px rgba(40,25,90,.06);transition:.2s;display:flex;flex-direction:column}.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}.photo{width:100%;aspect-ratio:3/4;object-fit:cover;background:linear-gradient(135deg,#f0eaff,#f9eaf1)}.cardbody{padding:16px;display:flex;flex-direction:column;flex:1}.card h3{margin:0 0 7px;font-size:19px}.meta{font-size:13px;color:var(--muted);line-height:1.7}.cause{margin-top:8px;font-size:13px;color:#8a405a}.view{margin-top:auto;padding-top:13px}.view button{width:100%;border:0;border-radius:10px;padding:10px;background:var(--primary);color:#fff;font-weight:900;cursor:pointer}.empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:18px;padding:38px;text-align:center;color:var(--muted)}
-.why{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.why-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}.why-card .big{font-size:31px}.why-card h3{margin:10px 0 7px;font-size:18px}.why-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.75}
-.cta{border-radius:24px;background:linear-gradient(135deg,#241052,#5a2ab9);color:#fff;padding:34px;display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:var(--shadow)}.cta h2{margin:0 0 8px;font-size:27px}.cta p{margin:0;color:#ddd6f4}.cta a{background:#fff;color:var(--primary);padding:12px 17px;border-radius:11px;font-weight:900;white-space:nowrap}
-footer{background:var(--navy);color:#d9def1;padding:45px 0 25px}.footergrid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:30px}.footer h3{color:#fff;margin:0 0 12px}.footer p,.footer a{font-size:14px;line-height:1.8;color:#b8c0dc}.copyright{margin-top:30px;padding-top:18px;border-top:1px solid #ffffff16;font-size:13px;color:#929bb9}
-.modal{position:fixed;inset:0;background:#09051dcc;display:none;align-items:center;justify-content:center;padding:16px;z-index:50}.modal.open{display:flex}.dialog{width:min(930px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:24px}.dialoghead{position:sticky;top:0;background:#fff;z-index:2;padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.dialoghead h2{margin:0}.close{border:0;background:#f1eff7;border-radius:10px;padding:8px 11px;cursor:pointer}.detail{padding:22px;display:grid;grid-template-columns:290px 1fr;gap:24px}.detail>div:first-child img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:18px;background:#f0eaff}.facts{display:grid;grid-template-columns:145px 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden}.facts>div{padding:11px 13px;border-bottom:1px solid var(--line);line-height:1.65}.facts>div:nth-last-child(-n+2){border-bottom:0}.label{font-weight:900;background:#faf9fd}.long{white-space:pre-wrap}.gallery{margin:0 22px 24px;padding-top:20px;border-top:1px solid var(--line)}
-.loading{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:18px;padding:38px;text-align:center;color:var(--muted)}
-@media(max-width:900px){.hero-inner{grid-template-columns:1fr}.hero-art{display:none}.grid{grid-template-columns:repeat(3,1fr)}.why{grid-template-columns:repeat(2,1fr)}.footergrid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:650px){.container{width:min(100% - 24px,1160px)}.nav{height:62px}.brand{font-size:20px}.links a:not(.admin){display:none}.hero-inner{min-height:auto;padding:43px 0 65px}.hero h1{font-size:38px}.hero p{font-size:15px}.search{flex-direction:column;background:transparent;box-shadow:none;padding:0;gap:8px}.search input{border-radius:11px}.search button{padding:12px}.stats{margin-top:-34px}.statbox{grid-template-columns:repeat(2,1fr)}.stat{padding:15px;border-right:0;border-bottom:1px solid var(--line)}.stat:nth-child(odd){border-right:1px solid var(--line)}.stat:nth-last-child(-n+2){border-bottom:0}.stat b{font-size:20px}.section-head h2{font-size:23px}.grid{grid-template-columns:repeat(2,1fr);gap:12px}.why{grid-template-columns:1fr 1fr;gap:12px}.why-card{padding:16px}.cta{padding:25px;display:block}.cta a{display:inline-block;margin-top:18px}.footergrid{grid-template-columns:1fr 1fr}.detail{grid-template-columns:1fr;padding:17px}.detail>div:first-child img{max-width:270px;display:block;margin:auto}.facts{grid-template-columns:120px 1fr}.dialog{border-radius:18px}}
-@media(max-width:390px){.grid{grid-template-columns:1fr}.why{grid-template-columns:1fr}.footergrid{grid-template-columns:1fr}.stat small{font-size:11px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0757d9">
+  <title>স্মৃতি সংরক্ষণ — Profile Search</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar"><div class="container nav"><a class="brand" href="#top"><span class="brandmark">✿</span>স্মৃতি</a><div class="links"><a href="#memories">সকল স্মৃতিচারণ</a><a href="#about">আমাদের সম্পর্কে</a><a href="#contact">যোগাযোগ</a><a class="admin" href="admin.html">⚙ প্রশাসন (Admin)</a></div></div></header>
-<section class="hero" id="top"><div class="container hero-inner"><div><div class="eyebrow">🕯️ ভালোবাসায় সংরক্ষিত স্মৃতি</div><h1>যারা চলে গেছেন, তারা আছেন<br><span>আমাদের স্মৃতিতে</span></h1><p>প্রিয়জনের স্মৃতি ধরে রাখতে তৈরি এই প্ল্যাটফর্ম। এখানে তাঁদের জীবনের গল্প, ছবি, স্মৃতি ও ভালোবাসার কথা সংরক্ষণ করা যায়।</p><form class="search" id="searchForm"><input id="search" placeholder="নাম লিখে খুঁজুন…" aria-label="নাম দিয়ে খুঁজুন"><button type="submit">🔎 খুঁজুন</button></form></div><div class="hero-art"><div class="lantern" aria-hidden="true"></div></div></div></section>
-<div class="container stats"><div class="statbox"><div class="stat"><div class="icon">👥</div><div><b id="sPeople">—</b><small>মোট স্মৃতিচারণ</small></div></div><div class="stat"><div class="icon">🗓️</div><div><b id="sMonth">—</b><small>এই মাসে যুক্ত</small></div></div><div class="stat"><div class="icon">💗</div><div><b id="sPhotos">—</b><small>ছবিসহ প্রোফাইল</small></div></div><div class="stat"><div class="icon">🔎</div><div><b id="sShown">—</b><small>সার্চ রেজাল্ট</small></div></div></div></div>
-<main class="container">
-<section class="section" id="memories"><div class="section-head"><div><h2>🕯️ সাম্প্রতিক স্মৃতিচারণ</h2><p>ভালোবাসায় সংরক্ষিত প্রিয় মানুষদের কিছু স্মৃতি</p></div><a class="seeall" href="#memories">সব দেখুন →</a></div><div id="list" class="grid"><div class="loading">তথ্য লোড হচ্ছে…</div></div></section>
-<section class="section" id="about"><div class="section-head"><div><h2>আমাদের এই প্রয়াস কেন?</h2><p>স্মৃতিকে শুধু মনে নয়, ভবিষ্যৎ প্রজন্মের কাছেও ধরে রাখার চেষ্টা</p></div></div><div class="why"><article class="why-card"><div class="big">💗</div><h3>স্মৃতি সংরক্ষণ</h3><p>প্রিয়জনের জীবন ও স্মরণীয় মুহূর্ত এক জায়গায় সংরক্ষণ করা।</p></article><article class="why-card"><div class="big">👨‍👩‍👧</div><h3>পরিবারের বন্ধন</h3><p>পরিবার ও প্রিয়জনদের মাঝে তাঁদের স্মৃতি নতুন করে জাগিয়ে রাখা।</p></article><article class="why-card"><div class="big">📖</div><h3>ইতিহাস ও উত্তরাধিকার</h3><p>জীবনের গল্প ও অভিজ্ঞতা ভবিষ্যৎ প্রজন্মের কাছে পৌঁছে দেওয়া।</p></article><article class="why-card"><div class="big">🕯️</div><h3>শ্রদ্ধা ও ভালোবাসা</h3><p>যাঁরা আমাদের জীবনকে সমৃদ্ধ করেছেন, তাঁদের প্রতি ভালোবাসার স্মারক।</p></article></div></section>
-<section class="section"><div class="cta"><div><h2>একটি স্মৃতি, একটি গল্প, একটি ভালোবাসা</h2><p>আপনার প্রিয়জনের স্মৃতি সংরক্ষণ করে রাখুন ভবিষ্যতের জন্য।</p></div><a href="admin.html">প্রশাসন প্যানেলে যান →</a></div></section>
-</main>
-<footer id="contact"><div class="container footergrid"><div><h3>✿ স্মৃতি</h3><p>যারা চলে গেছেন, তাঁদের গল্প, ছবি ও ভালোবাসার স্মৃতি আমাদের মাঝে বেঁচে থাকুক।</p></div><div><h3>দ্রুত লিংক</h3><a href="#top">হোম</a><br><a href="#memories">সকল স্মৃতিচারণ</a><br><a href="#about">আমাদের সম্পর্কে</a></div><div><h3>যোগাযোগ</h3><p>✉ example@email.com<br>☎ 01700-000000<br>⌖ ঢাকা, বাংলাদেশ</p></div><div><h3>আমাদের সাথে থাকুন</h3><p>ফেসবুক · ইউটিউব · টুইটার · ইনস্টাগ্রাম</p></div></div><div class="container copyright">© 2026 স্মৃতি ওয়েবসাইট · ভালোবাসায় সংরক্ষিত</div></footer>
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialoghead"><h2 id="modalTitle">ব্যক্তির বিস্তারিত তথ্য</h2><button class="close" id="close">✕</button></div><div id="detail"></div></div></div>
-<script src="config.js"></script><script>
-let sb=null,people=[],filtered=[];
-const $=id=>document.getElementById(id);
+  <header class="topbar">
+    <button class="icon-btn" id="menuBtn">☰</button>
+    <div><h1>স্মৃতি সংরক্ষণ</h1><small>সহজ সার্চ, দ্রুত তথ্য, নিরাপদ সংরক্ষণ</small></div>
+    <button class="icon-btn" id="adminBtn">⚙</button>
+  </header>
 
-function esc(s=''){
-  return String(s).replace(/[&<>"']/g,c=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-  }[c]));
-}
-function dateBn(v){
-  if(!v) return '-';
-
-  const d = new Date(v + 'T00:00:00');
-  if(Number.isNaN(d.getTime())) return esc(v);
-
-  const date = new Intl.DateTimeFormat('bn-BD',{
-    day:'2-digit',
-    month:'2-digit',
-    year:'numeric'
-  }).format(d);
-
-  const day = new Intl.DateTimeFormat('bn-BD',{
-    weekday:'long'
-  }).format(d);
-
-  return `${date}, ${day}`;
-}
-function img(src,name){
-  return src
-    ? `<img class="photo" src="${esc(src)}" alt="${esc(name)}" onerror="this.style.display='none'">`
-    : `<div class="photo" aria-label="ছবি নেই"></div>`;
-}
-function causeOf(p){
-  return p.death_reason || p.death_cause || '';
-}
-function render(){
-  const q=$('search').value.trim().toLocaleLowerCase('bn-BD');
-  filtered=people.filter(p=>
-    (p.name||'').toLocaleLowerCase('bn-BD').includes(q)
-  );
-  $('sShown').textContent=filtered.length.toLocaleString('bn-BD');
-
-  if(!filtered.length){
-    $('list').innerHTML=`<div class="empty">${
-      q?`“${esc(q)}” নামে কোনো স্মৃতি পাওয়া যায়নি।`
-       :'এখনও কোনো স্মৃতিচারণ যোগ করা হয়নি।'
-    }</div>`;
-    return;
-  }
-
-  $('list').innerHTML=filtered.map(p=>{
-    const cause=causeOf(p);
-    return `<article class="card">
-      ${img(p.photo_url,p.name)}
-      <div class="cardbody">
-        <h3>${esc(p.name)}</h3>
-        <div class="meta">
-          পিতা/স্বামী: ${esc(p.father_husband||'—')}<br>
-          ঠিকানা: ${esc(p.address||'—')}<br>
-          বয়স: ${p.age!=null?esc(p.age)+' বছর':'—'}<br>
-          মৃত্যু: ${dateBn(p.death_date)}
-        </div>
-        ${cause?`<div class="cause">🕊️ ${esc(cause)}</div>`:''}
-        <div class="view"><button onclick="openPerson('${esc(p.id)}')">বিস্তারিত দেখুন</button></div>
+  <main class="container">
+    <section class="search-card">
+      <div class="search-icon">⌕</div>
+      <h2>প্রোফাইল সার্চ করুন</h2>
+      <p>নাম লিখে প্রোফাইল খুঁজুন</p>
+      <div class="search-row">
+        <input id="searchInput" type="search" placeholder="নাম লিখুন..." autocomplete="off">
+        <button id="searchBtn" class="primary">🔍 সার্চ করুন</button>
       </div>
-    </article>`;
-  }).join('');
-}
-function openPerson(id){
-  const p=people.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  const cause=causeOf(p);
+    </section>
 
-  $('modalTitle').textContent=p.name||'ব্যক্তির বিস্তারিত তথ্য';
-  $('detail').innerHTML=`<div class="detail">
-    <div>${p.photo_url
-      ? `<img src="${esc(p.photo_url)}" alt="${esc(p.name||'')}" onerror="this.style.display='none'">`
-      : `<div class="photo" aria-label="ছবি নেই"></div>`
-    }</div>
-    <div class="facts">
-      <div class="label">নাম</div><div>${esc(p.name||'—')}</div>
-      <div class="label">পিতা/স্বামী</div><div>${esc(p.father_husband||'—')}</div>
-      <div class="label">ঠিকানা</div><div>${esc(p.address||'—')}</div>
-      <div class="label">বয়স</div><div>${p.age!=null?esc(p.age)+' বছর':'—'}</div>
-      <div class="label">মৃত্যুর তারিখ</div><div>${dateBn(p.death_date)}</div>
-      <div class="label">মৃত্যুর কারণ</div><div>${esc(cause||'—')}</div>
-    </div>
-  </div>`;
-  $('modal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeModal(){
-  $('modal').classList.remove('open');
-  document.body.style.overflow='';
-}
-$('close').onclick=closeModal;
-$('modal').addEventListener('click',e=>{
-  if(e.target.id==='modal')closeModal();
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeModal();
-});
-$('searchForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  render();
-  $('memories').scrollIntoView({behavior:'smooth'});
-});
-$('search').addEventListener('input',render);
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-title">Last Search</span>
+        <div class="stat-icon">👤</div>
+        <strong id="lastSearch">—</strong>
+        <small id="lastSearchTime">এখনও কোনো সার্চ নেই</small>
+      </div>
+      <div class="stat-card">
+        <span class="stat-title">Total Profiles</span>
+        <div class="stat-icon">👥</div>
+        <strong id="totalProfiles">0</strong>
+        <small>টি প্রোফাইল আছে</small>
+      </div>
+      <div class="stat-card monthly">
+        <span class="stat-title">এই মাসে যুক্ত</span>
+        <div class="stat-icon">📅</div>
+        <strong id="monthlyProfiles">0</strong>
+        <small>টি প্রোফাইল এই মাসে যোগ হয়েছে</small>
+      </div>
+    </section>
 
-async function init(){
-  try{
-    if(!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY)
-      throw new Error('config.js-এ Supabase সংযোগের তথ্য নেই।');
+    <section id="results" class="results hidden"></section>
+  </main>
 
-    sb=supabase.createClient(
-      window.SUPABASE_URL,
-      window.SUPABASE_ANON_KEY
-    );
+  <nav class="bottom-nav">
+    <button class="active">⌂<span>হোম</span></button>
+    <button id="historyBtn">◷<span>সার্চ হিস্টরি</span></button>
+    <button id="infoBtn">ⓘ<span>তথ্য</span></button>
+  </nav>
 
-    const {data,error}=await sb
-      .from('persons')
-      .select('*')
-      .order('created_at',{ascending:false});
-
-    if(error)throw error;
-
-    people=data||[];
-    $('sPeople').textContent=people.length.toLocaleString('bn-BD');
-    $('sPhotos').textContent=people.filter(p=>p.photo_url).length.toLocaleString('bn-BD');
-
-    const now=new Date();
-    $('sMonth').textContent=people.filter(p=>{
-      if(!p.created_at)return false;
-      const d=new Date(p.created_at);
-      return d.getMonth()===now.getMonth() &&
-             d.getFullYear()===now.getFullYear();
-    }).length.toLocaleString('bn-BD');
-
-    render();
-  }catch(err){
-    $('list').innerHTML=`<div class="empty">
-      তথ্য লোড করা যায়নি।<br>
-      <small>${esc(err.message||err)}</small>
-    </div>`;
-  }
-}
-init();
-
-</script></body></html>
+  <div id="toast" class="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
